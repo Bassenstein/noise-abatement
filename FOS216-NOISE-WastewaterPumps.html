@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOS216-NOISE-006 | Industrial Wastewater Pump Noise Mitigation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  :root{
+    --orange:#E1560F;
+    --orange-bright:#FF6A1A;
+    --teal:#0E8E84;
+    --teal-bright:#19C3B2;
+    --steel:#243038;
+    --steel-2:#1a232a;
+    --steel-3:#2e3c46;
+    --panel:#1c262d;
+    --panel-2:#212d35;
+    --ink:#e8edf0;
+    --ink-dim:#9fb0b8;
+    --ink-faint:#6b7d86;
+    --line:#34444e;
+    --good:#19C3B2;
+    --warn:#FF6A1A;
+    --bad:#e0473f;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--steel-2);
+    color:var(--ink);
+    font-family:'Archivo',sans-serif;
+    line-height:1.5;
+  }
+
+  .sheet{max-width:1180px; margin:0 auto; padding:0 0 80px;}
+
+  /* ===== TITLE BLOCK ===== */
+  .titleblock{
+    background:linear-gradient(135deg, var(--steel) 0%, var(--steel-2) 100%);
+    border-bottom:3px solid var(--orange);
+    padding:28px 36px 0;
+  }
+  .tb-top{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    border-bottom:1px solid var(--line); padding-bottom:18px;
+  }
+  .tb-mark{display:flex; align-items:center; gap:14px;}
+  .tb-logo{
+    width:46px; height:46px; flex-shrink:0;
+    border:2px solid var(--orange-bright); border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono',monospace; font-weight:800; font-size:13px;
+    color:var(--orange-bright);
+  }
+  .tb-logo img{
+    width:38px; height:38px; object-fit:contain;
+    filter:
+      drop-shadow(0 0 2px rgba(255,255,255,.95))
+      drop-shadow(0 0 5px rgba(255,255,255,.65))
+      drop-shadow(0 0 12px rgba(255,255,255,.35))
+      drop-shadow(0 0 25px rgba(255,199,44,.20));
+  }
+  .tb-name{font-family:'JetBrains Mono',monospace; letter-spacing:0.06em;}
+  .tb-name .l1{font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.18em;}
+  .tb-name .l2{font-size:18px; font-weight:700; color:var(--ink);}
+  .tb-doc{
+    font-family:'JetBrains Mono',monospace; text-align:right; font-size:11px; color:var(--ink-dim);
+  }
+  .tb-doc .docnum{font-size:15px; font-weight:700; color:var(--teal-bright); letter-spacing:0.04em;}
+
+  .tb-grid{
+    display:grid; grid-template-columns:repeat(5,1fr);
+    border-bottom:1px solid var(--line);
+  }
+  .tb-cell{
+    padding:12px 16px; border-right:1px solid var(--line);
+    font-family:'JetBrains Mono',monospace;
+  }
+  .tb-cell:last-child{border-right:none;}
+  .tb-cell .k{font-size:9.5px; text-transform:uppercase; letter-spacing:0.14em; color:var(--ink-faint); margin-bottom:4px;}
+  .tb-cell .v{font-size:12.5px; color:var(--ink); font-weight:600;}
+  .tb-cell .v.accent{color:var(--orange-bright);}
+  .tb-cell .v.teal{color:var(--teal-bright);}
+
+  .tb-title{padding:20px 0 24px;}
+  .tb-title .kicker{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.2em;
+    color:var(--orange-bright); text-transform:uppercase; margin-bottom:8px;
+  }
+  .tb-title h1{
+    margin:0; font-size:32px; font-weight:800; letter-spacing:-0.01em;
+    color:var(--ink);
+  }
+  .tb-title .sub{margin-top:8px; font-size:14.5px; color:var(--ink-dim); max-width:760px;}
+
+  /* ===== NAV ===== */
+  .nav{
+    background:var(--panel); border-bottom:1px solid var(--line);
+    padding:12px 36px; display:flex; gap:4px; flex-wrap:wrap;
+    position:sticky; top:0; z-index:50;
+  }
+  .nav a{
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-dim);
+    text-decoration:none; padding:7px 12px; border-radius:4px;
+    border:1px solid transparent; letter-spacing:0.02em;
+  }
+  .nav a:hover{color:var(--orange-bright); border-color:var(--line); background:var(--panel-2);}
+
+  /* ===== SECTIONS ===== */
+  section{padding:40px 36px 8px;}
+  .sec-head{
+    display:flex; align-items:baseline; gap:14px; margin-bottom:20px;
+    border-bottom:2px solid var(--orange); padding-bottom:10px;
+  }
+  .sec-num{
+    font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700;
+    color:var(--steel-2); background:var(--orange-bright);
+    padding:3px 9px; border-radius:3px;
+  }
+  .sec-head h2{margin:0; font-size:21px; font-weight:700; color:var(--ink);}
+  .sec-head .sec-sub{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-faint); margin-left:auto;}
+
+  p{color:var(--ink-dim); font-size:14.5px;}
+  strong{color:var(--ink); font-weight:600;}
+  .lead{font-size:15.5px; color:var(--ink-dim); max-width:880px;}
+
+  /* ===== CALLOUT / BASIS BOX ===== */
+  .callout{
+    border:1px solid var(--line); border-left:4px solid var(--teal-bright);
+    background:var(--panel); border-radius:4px; padding:16px 20px; margin:18px 0;
+  }
+  .callout.warn{border-left-color:var(--orange-bright);}
+  .callout .ct{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--teal-bright); margin-bottom:8px; font-weight:700;
+  }
+  .callout.warn .ct{color:var(--orange-bright);}
+  .callout p{margin:0; font-size:13.5px;}
+  .callout p + p{margin-top:8px;}
+
+  /* ===== DEFINITION / SPEC TABLES ===== */
+  table{width:100%; border-collapse:collapse; margin:18px 0; font-size:13.5px;}
+  th{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--ink-faint); text-align:left;
+    padding:10px 14px; border-bottom:2px solid var(--line); background:var(--panel-2);
+  }
+  td{padding:11px 14px; border-bottom:1px solid var(--line); color:var(--ink-dim); vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  td.mono{font-family:'JetBrains Mono',monospace; color:var(--ink); font-weight:600; white-space:nowrap;}
+  td strong{color:var(--ink);}
+  .tbl-wrap{border:1px solid var(--line); border-radius:6px; overflow:hidden;}
+  .tbl-wrap table{margin:0;}
+
+  .pill{
+    display:inline-block; font-family:'JetBrains Mono',monospace; font-size:10.5px;
+    font-weight:700; padding:2px 8px; border-radius:3px; letter-spacing:0.03em;
+  }
+  .pill.good{background:rgba(25,195,178,0.15); color:var(--teal-bright); border:1px solid rgba(25,195,178,0.4);}
+  .pill.warn{background:rgba(255,106,26,0.15); color:var(--orange-bright); border:1px solid rgba(255,106,26,0.4);}
+  .pill.bad{background:rgba(224,71,63,0.15); color:#ff8780; border:1px solid rgba(224,71,63,0.4);}
+
+  /* ===== MITIGATION CARDS ===== */
+  .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:18px 0;}
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:18px 0;}
+  @media (max-width:900px){.grid-3{grid-template-columns:1fr;} .grid-2{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:6px;
+    padding:18px; display:flex; flex-direction:column; gap:10px;
+  }
+  .card .ch{display:flex; align-items:center; justify-content:space-between;}
+  .card .ctitle{font-size:14.5px; font-weight:700; color:var(--ink);}
+  .card .cnum{
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--steel-2);
+    background:var(--teal-bright); padding:2px 8px; border-radius:3px; font-weight:700;
+  }
+  .card p{margin:0; font-size:13px;}
+  .card .creduction{
+    font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:800;
+    color:var(--orange-bright); margin-top:2px;
+  }
+  .card .creduction span{font-size:11px; color:var(--ink-faint); font-weight:500; display:block; margin-top:2px;}
+  .card .ctags{display:flex; gap:6px; flex-wrap:wrap;}
+  .tag{
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--ink-faint);
+    border:1px solid var(--line); padding:2px 7px; border-radius:10px;
+  }
+
+  /* ===== STACK / SIGNAL FLOW (noise budget) ===== */
+  .budget{
+    border:1px solid var(--line); border-radius:6px; overflow:hidden; margin:20px 0;
+  }
+  .budget-row{
+    display:grid; grid-template-columns:140px 1fr 90px 90px;
+    align-items:center; border-bottom:1px solid var(--line); background:var(--panel);
+  }
+  .budget-row:last-child{border-bottom:none;}
+  .budget-row.head{
+    background:var(--panel-2); font-family:'JetBrains Mono',monospace; font-size:10px;
+    text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-faint); padding:9px 14px;
+  }
+  .budget-row.head > div{padding:0;}
+  .budget-row > div{padding:12px 14px;}
+  .budget-row .stage{font-size:13px; font-weight:600; color:var(--ink); font-family:'JetBrains Mono',monospace;}
+  .budget-row .desc{font-size:13px; color:var(--ink-dim);}
+  .budget-row .dba{font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:var(--orange-bright); text-align:right;}
+  .budget-row .cum{font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:var(--teal-bright); text-align:right;}
+  .budget-row.final{background:rgba(25,195,178,0.08);}
+  .budget-row.final .stage{color:var(--teal-bright);}
+  .budget-row.start{background:rgba(255,106,26,0.07);}
+
+  /* ===== SVG DIAGRAM FRAME ===== */
+  .figwrap{
+    background:var(--panel-2); border:1px solid var(--line); border-radius:6px;
+    padding:18px; margin:18px 0;
+  }
+  .figcap{
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-faint);
+    margin-top:10px; text-align:center; letter-spacing:0.02em;
+  }
+  .figcap strong{color:var(--ink-dim);}
+
+  /* ===== CHECKLIST ===== */
+  .checklist{list-style:none; margin:18px 0; padding:0; display:flex; flex-direction:column; gap:8px;}
+  .checklist li{
+    display:flex; gap:12px; align-items:flex-start; background:var(--panel);
+    border:1px solid var(--line); border-radius:5px; padding:11px 14px; font-size:13.5px; color:var(--ink-dim);
+  }
+  .checklist .chk{
+    flex-shrink:0; width:18px; height:18px; border-radius:4px;
+    background:var(--teal-bright); color:var(--steel-2); font-size:12px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; margin-top:1px;
+  }
+  .checklist strong{color:var(--ink);}
+
+  /* ===== FOOTER ===== */
+  footer{
+    margin-top:40px; border-top:1px solid var(--line); padding:24px 36px;
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--ink-faint);
+  }
+  footer .rev{color:var(--orange-bright);}
+
+  code{
+    font-family:'JetBrains Mono',monospace; background:var(--panel-2);
+    padding:1px 6px; border-radius:3px; font-size:12.5px; color:var(--teal-bright);
+    border:1px solid var(--line);
+  }
+
+  ul.std{margin:10px 0; padding-left:20px;}
+  ul.std li{color:var(--ink-dim); font-size:13.5px; margin-bottom:6px;}
+  ul.std li strong{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <!-- ===== TITLE BLOCK ===== -->
+  <div class="titleblock">
+    <div class="tb-top">
+      <div class="tb-mark">
+        <div class="tb-logo"><img src="data:image/png;base64,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" alt="The FixOurStreets216 Project logomark"></div>
+        <div class="tb-name">
+          <div class="l1">FixOurStreets216 Project</div>
+          <div class="l2">Industrial Acoustic Compliance Series</div>
+        </div>
+      </div>
+      <div class="tb-doc">
+        <div>HYPERSCALE DATA CENTER &mdash; FENCE LINE NOISE</div>
+        <div class="docnum">FOS216&#8209;NOISE&#8209;006</div>
+      </div>
+    </div>
+    <div class="tb-grid">
+      <div class="tb-cell"><div class="k">Project</div><div class="v">Fence Line Noise Monitoring</div></div>
+      <div class="tb-cell"><div class="k">Sheet</div><div class="v accent">Industrial Wastewater Pumps</div></div>
+      <div class="tb-cell"><div class="k">Jurisdiction</div><div class="v">City of Cleveland, Ohio</div></div>
+      <div class="tb-cell"><div class="k">Scale</div><div class="v">NTS &mdash; Plan / Section</div></div>
+      <div class="tb-cell"><div class="k">Date</div><div class="v teal">2026&#8209;06&#8209;30</div></div>
+    </div>
+    <div class="tb-title">
+      <div class="kicker">Mitigation Plan / Design Basis</div>
+      <h1>Industrial Wastewater Pump Noise &mdash; Fence Line Reduction Strategy</h1>
+      <p class="sub">A practical mitigation sequence for keeping high-flow effluent, lift station, and treatment-train transfer pump noise below the City of Cleveland's noise threshold at the property line, applied to hyperscale data center wastewater pump rooms and lift stations.</p>
+    </div>
+  </div>
+
+  <!-- ===== NAV ===== -->
+  <nav class="nav">
+    <a href="#regulatory">01 / Regulatory Basis</a>
+    <a href="#source">02 / Noise Source Profile</a>
+    <a href="#budget">03 / Noise Budget</a>
+    <a href="#mitigation">04 / Mitigation Measures</a>
+    <a href="#layout">05 / Site Layout Diagram</a>
+    <a href="#monitoring">06 / Verification &amp; Monitoring</a>
+    <a href="#checklist">07 / Design Checklist</a>
+  </nav>
+
+  <!-- ===== 01 REGULATORY BASIS ===== -->
+  <section id="regulatory">
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <h2>Regulatory Basis &mdash; What "Threshold" Means in Cleveland</h2>
+      <span class="sec-sub">CMC &sect;605.10 / Zoning Performance Standards / OEPA PTIO</span>
+    </div>
+    <p class="lead">Cleveland's Codified Ordinances do not set a single numeric fence-line decibel limit the way some suburban zoning codes do. The applicable framework is a layered one, and the mitigation design below is built to clear the strictest layer with margin &mdash; consistent with the design basis used across the FOS216-NOISE series.</p>
+
+    <div class="grid-2">
+      <div class="callout">
+        <div class="ct">Layer 1 &mdash; CMC &sect;605.10, Unnecessary Noise</div>
+        <p>Cleveland's general noise ordinance prohibits <strong>"unreasonably loud, disturbing and unnecessary noise&hellip; detrimental to the life and health of any individual, or [that] unreasonably disturb[s] the quiet, comfort, or repose of neighboring inhabitants."</strong> This is a qualitative/nuisance standard, not a posted dB(A) number &mdash; enforcement is complaint- and officer-judgment driven.</p>
+      </div>
+      <div class="callout">
+        <div class="ct">Layer 2 &mdash; Zoning Performance Standards</div>
+        <p>Industrial-district performance standards require noise be <strong>"muffled so as not to become objectionable due to intermittence, beat frequency, shrillness, or intensity,"</strong> measured at the property line of the tract. No fixed number is published; the standard is character-based &mdash; and "intermittence" is directly relevant here, since lift-station and transfer pumps cycle on/off rather than running continuously.</p>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">Design Basis Adopted for This Project</div>
+      <p>Because Cleveland's own code is qualitative, FOS216 designs hyperscale wastewater pump installations to the numeric target most commonly cited by Ohio EPA and used as the de facto industrial fence-line standard in this region &mdash; the same target applied across the FOS216-NOISE series:</p>
+      <p><strong>55 dB(A) Leq &mdash; daytime (7:00 a.m.&ndash;10:00 p.m.)</strong> &nbsp;&middot;&nbsp; <strong>50 dB(A) Leq &mdash; nighttime (10:00 p.m.&ndash;7:00 a.m.)</strong>, measured at the nearest sensitive receptor or property line, whichever is more restrictive.</p>
+      <p>This target is conservative relative to Cleveland's actual enforcement standard and is the number used throughout this document. It is a design target, not a legal limit recited from Cleveland's code &mdash; treat it as the engineering basis that keeps the project well clear of a §605.10 nuisance complaint, not as a quoted ordinance figure.</p>
+    </div>
+
+    <p>Two additional touch points apply to a hyperscale wastewater pump installation specifically:</p>
+    <ul class="std">
+      <li><strong>Cycling/intermittent operation is the controlling complaint risk, not steady-state Leq:</strong> lift station and transfer pumps start and stop with wet-well level or treatment-train batch timing, often including off-hours. A pump bank that's quiet on average but produces a sharp on/off transient at 2:00 a.m. is exactly the "intermittence" pattern Cleveland's zoning language calls out, and is statistically the most common driver of industrial noise complaints regardless of the underlying Leq number.</li>
+      <li><strong>Ohio EPA NPDES / PTI coordination:</strong> the wastewater pump station itself is not separately air- or noise-permitted, but where it serves a permitted discharge system (consistent with the FOS216 PFAS treatment train design basis already on file for this project), OEPA and Cleveland Division of Water Pollution Control review of the pump station's site plan commonly requests the same fence-line noise impact confirmation used for the mechanical yard.</li>
+    </ul>
+  </section>
+
+  <!-- ===== 02 SOURCE PROFILE ===== -->
+  <section id="source">
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <h2>Noise Source Profile &mdash; Industrial Wastewater Pumps</h2>
+      <span class="sec-sub">Vertical turbine lift station + horizontal centrifugal transfer pumps</span>
+    </div>
+    <p class="lead">A hyperscale wastewater pump room mixes several distinct noise mechanisms across the lift station and treatment-train transfer pumps. Unlike the cooling tower (one dominant splash mechanism) or the transformer (one dominant tone), pump noise is a composite of motor, hydraulic, and cavitation sources that each need separate attention.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Source Point</th><th>Mechanism</th><th>Typical Unmitigated Level</th><th>Dominant Frequency</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Motor noise (electromagnetic + cooling fan)</strong></td>
+            <td>Stator slot frequency tones + shaft-mounted cooling fan, scales with HP</td>
+            <td class="mono">72&ndash;82 dB(A) @ 3 ft, large units (&ge;200 HP)</td>
+            <td>Broadband + tonal at pole-pass frequency</td>
+          </tr>
+          <tr>
+            <td><strong>Hydraulic / flow noise</strong></td>
+            <td>Turbulent flow through volute, impeller vane-pass interaction</td>
+            <td class="mono">70&ndash;78 dB(A) @ 3 ft</td>
+            <td>Vane-pass tone (impeller blades &times; RPM) + broadband</td>
+          </tr>
+          <tr>
+            <td><strong>Cavitation (off-design operation)</strong></td>
+            <td>Vapor bubble collapse when pump runs outside best-efficiency point, common at low wet-well level</td>
+            <td class="mono">80&ndash;90+ dB(A) @ 3 ft when present</td>
+            <td>Broadband, harsh/crackling character, high-frequency emphasis</td>
+          </tr>
+          <tr>
+            <td><strong>Discharge piping / check valve slam</strong></td>
+            <td>Water hammer at pump start/stop, check valve closure on flow reversal</td>
+            <td class="mono">Impulsive, up to 95 dB(A) peak (not Leq)</td>
+            <td>Broadband impulse, very short duration</td>
+          </tr>
+          <tr>
+            <td><strong>Building/structure-borne transmission</strong></td>
+            <td>Vibration through pump base, piping penetrations, and pump room walls into the building envelope</td>
+            <td class="mono">Path-dependent; can dominate exterior level if untreated</td>
+            <td>Low-frequency emphasis (structure-borne)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <div class="ct">Why Cavitation and Water Hammer Are the Real Design Drivers</div>
+      <p>Steady-state, correctly-sized pump noise at the fence line is rarely the problem &mdash; a pump room is typically indoors, and geometric spreading plus one building wall already does most of the work. The actual risk is <strong>off-design operation</strong>: cavitation from a wet-well level control problem, or check-valve slam from a poorly sequenced VFD ramp-down, both of which produce sudden, loud, impulsive noise events that are exactly the "intermittence" pattern the zoning code penalizes &mdash; and exactly the kind of event a neighbor calls in on. <strong>Correct hydraulic design and control sequencing prevent more fence-line noise risk here than any acoustic hardware does.</strong></p>
+    </div>
+  </section>
+
+  <!-- ===== 03 NOISE BUDGET ===== -->
+  <section id="budget">
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <h2>Noise Budget &mdash; Path From Source to Fence Line</h2>
+      <span class="sec-sub">Worked example &middot; 250 HP transfer pump bank, indoor pump room, 350&ndash;ft setback</span>
+    </div>
+    <p class="lead">A representative noise budget for a bank of three 250 HP horizontal centrifugal transfer pumps (N+1, treatment-train duty) housed in an indoor pump room, sited 350 ft from the nearest residential fence line.</p>
+
+    <div class="budget">
+      <div class="budget-row head">
+        <div>Stage</div><div>Treatment Applied</div><div style="text-align:right;">Stage&nbsp;&Delta;</div><div style="text-align:right;">Running&nbsp;Level</div>
+      </div>
+      <div class="budget-row start">
+        <div class="stage">SRC</div>
+        <div class="desc">Combined motor + hydraulic noise, single pump at design duty point, measured at 3 ft</div>
+        <div class="dba">&mdash;</div>
+        <div class="cum">79 dB(A)</div>
+      </div>
+      <div class="budget-row">
+        <div class="stage">ENCL</div>
+        <div class="desc">Pump room building envelope &mdash; CMU walls, solid-core door, sealed penetrations (interior&rarr;exterior transmission loss)</div>
+        <div class="dba">&minus;25.0</div>
+        <div class="cum">54.0 dB(A)</div>
+      </div>
+      <div class="budget-row">
+        <div class="stage">GEO</div>
+        <div class="desc">Geometric spreading from exterior wall, point source approximation, 10 ft &rarr; 350 ft (6 dB per doubling)</div>
+        <div class="dba">&minus;31.0</div>
+        <div class="cum">23.0 dB(A)</div>
+      </div>
+      <div class="budget-row">
+        <div class="stage">ATM</div>
+        <div class="desc">Atmospheric/ground absorption over soft ground, 350 ft, mid-frequency content</div>
+        <div class="dba">&minus;2.1</div>
+        <div class="cum">20.9 dB(A)</div>
+      </div>
+      <div class="budget-row">
+        <div class="stage">MULTI</div>
+        <div class="desc">Bank correction &mdash; 3 pumps (N+1), logarithmic summation (+10&middot;log&#8321;&#8320;3), conservative co-running assumption</div>
+        <div class="dba">+4.8</div>
+        <div class="cum">25.7 dB(A)</div>
+      </div>
+      <div class="budget-row final">
+        <div class="stage">RESULT</div>
+        <div class="desc">Predicted fence-line level, steady-state design-duty operation, indoor pump room</div>
+        <div class="dba">&mdash;</div>
+        <div class="cum">25.7 dB(A)</div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <div class="ct">The Steady-State Number Is Not the Compliance Risk</div>
+      <p>At 25.7 dB(A), this installation clears the 55/50 dB(A) target with enormous margin under normal operation &mdash; the indoor enclosure alone does most of the work. <strong>The compliance risk this document actually needs to manage is the off-design transient case</strong>: a cavitating pump running 10&ndash;15 dB louder than the design-duty source level above, combined with a check-valve slam event that can add a further impulsive 10&ndash;20 dB peak (not Leq, but audible and complaint-generating regardless). A pump room engineered only to the steady-state number and left without proper level control, VFD ramp logic, and valve selection can still generate a fence-line nuisance complaint even though its "on-paper" noise budget looks comfortable. Mitigation below is sequenced to close that gap, not to chase the already-compliant steady-state figure.</p>
+    </div>
+  </section>
+
+  <!-- ===== 04 MITIGATION MEASURES ===== -->
+  <section id="mitigation">
+    <div class="sec-head">
+      <span class="sec-num">04</span>
+      <h2>Mitigation Measures &mdash; Ranked by Cost-Effectiveness</h2>
+      <span class="sec-sub">Apply in order; stop once target + margin is met</span>
+    </div>
+    <p class="lead">Measures below are sequenced to close the actual risk gap identified in Section 03 first &mdash; controlling cavitation and water hammer &mdash; before standard acoustic hardware, which is the reverse priority from a source that's continuously noisy at steady state.</p>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="ch"><span class="ctitle">Wet-Well Level Control / Anti-Cavitation Sequencing</span><span class="cnum">01</span></div>
+        <div class="creduction">&minus;10&ndash;15 dB(A) <span>eliminates cavitation event entirely vs. partial mitigation</span></div>
+        <p>Properly tuned level transmitters and lead/lag pump staging logic that keeps each pump within its best-efficiency-point flow range and never allows run-dry or low-NPSH operation. This is a controls and hydraulic-design fix, not acoustic hardware &mdash; it removes the loudest possible event from the noise budget entirely rather than attenuating it after the fact. Zero incremental hardware cost if designed in from the start; expensive to retrofit if undersized piping or wet-well geometry forces marginal NPSH at any operating point.</p>
+        <div class="ctags"><span class="tag">SOURCE TREATMENT</span><span class="tag">CONTROLS / HYDRAULIC DESIGN</span></div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ctitle">Slow-Closing / Non-Slam Check Valves</span><span class="cnum">02</span></div>
+        <div class="creduction">&minus;15&ndash;20 dB peak <span>eliminates water hammer impulse event</span></div>
+        <p>Spring-loaded silent/non-slam check valves or VFD-controlled soft-stop ramping in place of conventional swing checks. Water hammer is an impulsive event, not a steady Leq contributor, but it is exactly the kind of "intermittent" sharp noise that drives nuisance complaints &mdash; specify at the same procurement stage as the pumps themselves, since retrofit means a piping shutdown.</p>
+        <div class="ctags"><span class="tag">SOURCE TREATMENT</span><span class="tag">PROCUREMENT-STAGE</span></div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ctitle">Pump Room Envelope &amp; Penetration Sealing</span><span class="cnum">03</span></div>
+        <div class="creduction">&minus;20&ndash;25 dB(A) <span>interior-to-exterior transmission, as modeled in Section 03</span></div>
+        <p>Solid-core or acoustic-rated door (STC 35+), sealed conduit/piping penetrations with acoustic sealant, and a CMU or equivalent-mass exterior wall. This is the single highest-leverage measure for steady-state pump noise and is typically achieved by standard mechanical room construction practice &mdash; the design discipline is making sure penetrations don't become flanking paths that undo the wall's performance.</p>
+        <div class="ctags"><span class="tag">ENVELOPE</span><span class="tag">STANDARD CONSTRUCTION PRACTICE</span></div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ctitle">Pump/Motor Base Vibration Isolation</span><span class="cnum">04</span></div>
+        <div class="creduction">&minus;5&ndash;8 dB(A) <span>structure-borne path into building/piping</span></div>
+        <p>Spring or elastomeric isolators between the pump baseplate and housekeeping pad, plus flexible pipe connectors at suction and discharge to prevent vibration transmission through rigid piping runs into the building structure and ultimately the exterior envelope. Without this, structure-borne transmission can flank the envelope treatment in Measure 03 entirely.</p>
+        <div class="ctags"><span class="tag">PATH TREATMENT</span><span class="tag">RETROFIT-CAPABLE</span></div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ctitle">VFD Speed Control / Soft-Start</span><span class="cnum">05</span></div>
+        <div class="creduction">&minus;4&ndash;7 dB(A) <span>at part-load operation, vs. across-the-line start/stop</span></div>
+        <p>Variable-frequency drives running pumps at the minimum speed that meets actual flow demand rather than full-speed on/off cycling. Reduces both motor noise and the abruptness of the start/stop transient that drives the intermittence-related complaint risk, while also reducing the wear that leads to cavitation and check-valve slam over the equipment's service life.</p>
+        <div class="ctags"><span class="tag">OPERATIONAL</span><span class="tag">RELIABILITY SYNERGY</span></div>
+      </div>
+
+      <div class="card">
+        <div class="ch"><span class="ctitle">Discharge Pipe Lagging / Acoustic Wrap</span><span class="cnum">06</span></div>
+        <div class="creduction">&minus;5&ndash;10 dB(A) <span>localized, where piping exits the building envelope</span></div>
+        <p>Reserved for sites where piping must exit the pump room near the property line or where an exposed exterior discharge run carries audible flow noise &mdash; mass-loaded vinyl or mineral-wool lagging wrapped around the pipe run, particularly at any point where it penetrates the exterior wall and becomes a flanking noise path around the envelope treatment.</p>
+        <div class="ctags"><span class="tag">LAST RESORT</span><span class="tag">SITE-SPECIFIC</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 05 SITE LAYOUT DIAGRAM ===== -->
+  <section id="layout">
+    <div class="sec-head">
+      <span class="sec-num">05</span>
+      <h2>Site Layout Diagram &mdash; Mitigation Stack in Plan</h2>
+      <span class="sec-sub">Plan view &middot; NTS</span>
+    </div>
+
+    <div class="figwrap">
+      <svg viewBox="0 0 1100 520" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; display:block;">
+        <defs>
+          <pattern id="hatch3" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="8" stroke="#34444e" stroke-width="1.5"/>
+          </pattern>
+        </defs>
+        <rect width="1100" height="520" fill="#1a232a"/>
+
+        <!-- Fence line -->
+        <line x1="60" y1="40" x2="60" y2="480" stroke="#9fb0b8" stroke-width="3" stroke-dasharray="2 6"/>
+        <text x="40" y="30" fill="#9fb0b8" font-family="JetBrains Mono" font-size="12" font-weight="700">PROPERTY / FENCE LINE</text>
+
+        <!-- Nearest residential receptor -->
+        <rect x="10" y="220" width="40" height="60" fill="#2e3c46" stroke="#6b7d86" stroke-width="1.5"/>
+        <text x="12" y="300" fill="#9fb0b8" font-family="JetBrains Mono" font-size="10">RECEPTOR</text>
+        <text x="6" y="312" fill="#6b7d86" font-family="JetBrains Mono" font-size="9">(NEAREST RES.)</text>
+
+        <!-- Setback distance line -->
+        <line x1="60" y1="500" x2="430" y2="500" stroke="#19C3B2" stroke-width="1.5"/>
+        <line x1="60" y1="492" x2="60" y2="508" stroke="#19C3B2" stroke-width="1.5"/>
+        <line x1="430" y1="492" x2="430" y2="508" stroke="#19C3B2" stroke-width="1.5"/>
+        <text x="155" y="516" fill="#19C3B2" font-family="JetBrains Mono" font-size="11" font-weight="700">SETBACK &#8805; 350 FT</text>
+
+        <!-- Treatment yard boundary -->
+        <rect x="260" y="80" width="780" height="360" fill="none" stroke="#34444e" stroke-width="1.5" stroke-dasharray="3 5"/>
+        <text x="270" y="70" fill="#6b7d86" font-family="JetBrains Mono" font-size="11">WASTEWATER TREATMENT / LIFT STATION YARD</text>
+
+        <!-- Pump room (enclosed building, Measure 03) -->
+        <g>
+          <rect x="320" y="120" width="320" height="200" fill="#212d35" stroke="#FF6A1A" stroke-width="2.5"/>
+          <text x="335" y="142" fill="#FF6A1A" font-family="JetBrains Mono" font-size="12" font-weight="700">03 / PUMP ROOM &mdash; CMU ENVELOPE</text>
+          <text x="335" y="158" fill="#6b7d86" font-family="JetBrains Mono" font-size="9">SEALED PENETRATIONS, ACOUSTIC DOOR</text>
+
+          <!-- 3 pumps inside (N+1) -->
+          <g transform="translate(345,180)">
+            <rect width="80" height="56" rx="3" fill="#243038" stroke="#19C3B2" stroke-width="1.5"/>
+            <circle cx="22" cy="28" r="14" fill="none" stroke="#9fb0b8" stroke-width="1.2"/>
+            <rect x="40" y="20" width="34" height="16" fill="#1c262d" stroke="#9fb0b8" stroke-width="1"/>
+            <text x="40" y="70" fill="#9fb0b8" font-family="JetBrains Mono" font-size="8">PUMP 1</text>
+          </g>
+          <g transform="translate(445,180)">
+            <rect width="80" height="56" rx="3" fill="#243038" stroke="#19C3B2" stroke-width="1.5"/>
+            <circle cx="22" cy="28" r="14" fill="none" stroke="#9fb0b8" stroke-width="1.2"/>
+            <rect x="40" y="20" width="34" height="16" fill="#1c262d" stroke="#9fb0b8" stroke-width="1"/>
+            <text x="40" y="70" fill="#9fb0b8" font-family="JetBrains Mono" font-size="8">PUMP 2</text>
+          </g>
+          <g transform="translate(545,180)">
+            <rect width="80" height="56" rx="3" fill="#243038" stroke="#19C3B2" stroke-width="1.5"/>
+            <circle cx="22" cy="28" r="14" fill="none" stroke="#9fb0b8" stroke-width="1.2"/>
+            <rect x="40" y="20" width="34" height="16" fill="#1c262d" stroke="#9fb0b8" stroke-width="1"/>
+            <text x="40" y="70" fill="#9fb0b8" font-family="JetBrains Mono" font-size="8">PUMP 3 (STBY)</text>
+          </g>
+
+          <!-- isolators -->
+          <g transform="translate(345,250)">
+            <rect width="280" height="20" fill="#1c262d" stroke="#FF6A1A" stroke-width="1.5" stroke-dasharray="3 2"/>
+            <text x="140" y="14" fill="#FF6A1A" font-family="JetBrains Mono" font-size="8" text-anchor="middle" font-weight="700">04 / VIBRATION ISOLATION BASE + FLEX CONNECTORS</text>
+          </g>
+
+          <!-- wet well -->
+          <g transform="translate(345,285)">
+            <rect width="120" height="24" fill="#1c262d" stroke="#9fb0b8" stroke-width="1.2"/>
+            <text x="60" y="16" fill="#9fb0b8" font-family="JetBrains Mono" font-size="7" text-anchor="middle">WET WELL + LEVEL CONTROL (01)</text>
+          </g>
+        </g>
+
+        <!-- discharge piping exiting toward treatment train, with check valve callout -->
+        <line x1="640" y1="220" x2="900" y2="220" stroke="#19C3B2" stroke-width="3"/>
+        <rect x="700" y="208" width="34" height="24" fill="#1c262d" stroke="#FF6A1A" stroke-width="1.5"/>
+        <text x="717" y="224" fill="#FF6A1A" font-family="JetBrains Mono" font-size="7" text-anchor="middle" font-weight="700">02</text>
+        <text x="670" y="198" fill="#FF6A1A" font-family="JetBrains Mono" font-size="9" font-weight="700">02 / NON-SLAM CHECK VALVE</text>
+        <text x="900" y="216" fill="#9fb0b8" font-family="JetBrains Mono" font-size="9">TO TREATMENT TRAIN</text>
+
+        <!-- pipe lagging note where it could exit toward fence (illustrative, not present at 350ft setback) -->
+        <text x="335" y="350" fill="#6b7d86" font-family="JetBrains Mono" font-size="9">06 / PIPE LAGGING &mdash; RESERVED, ONLY IF DISCHARGE RUN EXITS NEAR FENCE LINE</text>
+
+        <!-- contour rings -->
+        <ellipse cx="470" cy="220" rx="500" ry="280" fill="none" stroke="#34444e" stroke-width="1" stroke-dasharray="2 4" opacity="0.5"/>
+      </svg>
+      <div class="figcap">Plan diagram &mdash; representative 3-pump bank (N+1) inside an enclosed pump room, with Measures 01&ndash;04 indicated and Measure 06 shown as a reserved, site-conditional treatment. Not a survey-accurate site plan; for design-intent coordination only.</div>
+    </div>
+  </section>
+
+  <!-- ===== 06 MONITORING ===== -->
+  <section id="monitoring">
+    <div class="sec-head">
+      <span class="sec-num">06</span>
+      <h2>Verification &amp; Continuous Monitoring</h2>
+      <span class="sec-sub">Fence line noise monitoring program</span>
+    </div>
+    <p class="lead">Mitigation design is validated twice: once at commissioning, with explicit testing across the full operating envelope rather than a single design-duty point, and continuously thereafter via the fence-line monitoring array shared across the FOS216-NOISE program.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Stage</th><th>Method</th><th>Acceptance Criterion</th><th>Frequency</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Pre-construction baseline</strong></td>
+            <td>ANSI S1.4 Type 1 sound level meter survey, ambient (no pumps energized)</td>
+            <td>Establish existing ambient L90/L50/L10</td>
+            <td>One-time</td>
+          </tr>
+          <tr>
+            <td><strong>Commissioning survey &mdash; steady state</strong></td>
+            <td>All pumps at design duty point, day + night, all receptors</td>
+            <td class="mono"><span class="pill good">&le; 55 dB(A) day / 50 dB(A) night</span></td>
+            <td>One-time, post-startup</td>
+          </tr>
+          <tr>
+            <td><strong>Commissioning survey &mdash; transient/start-stop</strong></td>
+            <td><strong>Deliberate pump start/stop cycling and lead/lag handoff observed</strong>, confirming non-slam valve performance and absence of audible cavitation across the full operating range, not just the design point</td>
+            <td class="mono"><span class="pill good">No audible impulse event at receptor; no cavitation signature in 1/3-octave spectrum</span></td>
+            <td>One-time, post-startup</td>
+          </tr>
+          <tr>
+            <td><strong>Continuous fence-line monitoring</strong></td>
+            <td>Permanently mounted Type 1 monitoring stations, telemetered to BMS/EMS, with peak/impulse logging in addition to Leq</td>
+            <td>Alarm at &gt;52 dB(A) day / &gt;47 dB(A) night Leq, or any single impulse event &gt;65 dB(A) peak</td>
+            <td>24/7/365</td>
+          </tr>
+          <tr>
+            <td><strong>Annual compliance re-survey</strong></td>
+            <td>Full operating range; confirms wet-well level control hasn't drifted into marginal-NPSH territory and check valves haven't degraded</td>
+            <td>No new cavitation or slam signature versus commissioning baseline</td>
+            <td>Annual</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <div class="ct">Integration Note</div>
+      <p>This monitoring array shares architecture with the cooling tower (FOS216-NOISE-004) and HV transformer (FOS216-NOISE-005) modules &mdash; fence-line stations report into the same Cityworks-style asset/event model, with peak/impulse logging added here specifically to catch the intermittent water-hammer and cavitation events that are the controlling risk for this source.</p>
+    </div>
+  </section>
+
+  <!-- ===== 07 CHECKLIST ===== -->
+  <section id="checklist">
+    <div class="sec-head">
+      <span class="sec-num">07</span>
+      <h2>Design Checklist</h2>
+      <span class="sec-sub">Carry into procurement spec and site plan submittal</span>
+    </div>
+    <ul class="checklist">
+      <li><span class="chk">&#10003;</span><div><strong>Wet-well level control logic</strong> verified to keep every pump within best-efficiency-point flow range across the full lead/lag/standby rotation, not just the lead pump.</div></li>
+      <li><span class="chk">&#10003;</span><div><strong>Non-slam / slow-closing check valves</strong> specified at procurement for every pump discharge, sized for the actual flow reversal condition.</div></li>
+      <li><span class="chk">&#10003;</span><div><strong>Pump room envelope</strong> &mdash; acoustic-rated door, sealed conduit/piping penetrations, confirmed with the building envelope design, not assumed.</div></li>
+      <li><span class="chk">&#10003;</span><div><strong>Vibration isolation base and flexible pipe connectors</strong> specified for every pump, not just the largest unit.</div></li>
+      <li><span class="chk">&#10003;</span><div><strong>VFD soft-start/soft-stop ramp profiles</strong> programmed and confirmed against actual NPSH curve, not factory default.</div></li>
+      <li><span class="chk">&#10003;</span><div><strong>Commissioning survey scope</strong> includes deliberate start/stop and lead/lag transient testing, not just steady-state design-duty measurement.</div></li>
+      <li><span class="chk">&#10003;</span><div><strong>Peak/impulse logging</strong> included on continuous fence-line monitoring stations in addition to standard Leq tracking.</div></li>
+      <li><span class="chk">&#10003;</span><div><strong>Discharge piping routing</strong> reviewed for any run that exits the building envelope near the fence line; lagging specified if so.</div></li>
+    </ul>
+  </section>
+
+  <footer>
+    <div>FOS216&#8209;NOISE&#8209;006 &middot; Industrial Wastewater Pump Noise Mitigation &middot; The FixOurStreets216 Project</div>
+    <div>REV <span class="rev">A</span> &middot; 2026&#8209;06&#8209;30</div>
+  </footer>
+
+</div>
+</body>
+</html>

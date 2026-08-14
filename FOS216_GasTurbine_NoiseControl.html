@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gas Turbine Exhaust Stack Noise Control — FOS216 Fenceline Compliance</title>
+<style>
+  /* ══════════════════════════════════════════════
+     DESIGN SYSTEM — FOS216 Industrial Dark Panel
+     Archivo (display/UI) + JetBrains Mono (data)
+     Deploy-orange / teal / steel palette
+  ══════════════════════════════════════════════ */
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root {
+    --bg-base:     #0d0f12;
+    --bg-panel:    #13171d;
+    --bg-card:     #1a1f28;
+    --bg-inset:    #0f1217;
+    --border:      #252d38;
+    --border-hi:   #2e3a4a;
+    --orange:      #e85f2a;
+    --orange-dim:  #a34119;
+    --orange-glow: rgba(232,95,42,0.12);
+    --teal:        #29c5b4;
+    --teal-dim:    #1a8a7e;
+    --teal-glow:   rgba(41,197,180,0.10);
+    --steel:       #7a8fa6;
+    --steel-hi:    #a8bfd4;
+    --amber:       #f5a623;
+    --green:       #3cc97a;
+    --red:         #e84242;
+    --text-primary: #e8edf3;
+    --text-body:    #99aabb;
+    --text-muted:   #556677;
+    --text-code:    #b8d4e8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-base);
+    color: var(--text-body);
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ──────────────────────────────────── */
+  header {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+
+  .wordmark {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .wordmark span { color: var(--orange); }
+
+  .doc-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── HERO ─────────────────────────────────────── */
+  .hero {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 52px 32px 44px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse 600px 300px at 80% -10%, rgba(232,95,42,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 400px 200px at 10% 120%, rgba(41,197,180,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 16px;
+  }
+
+  .hero h1 {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 900;
+    font-size: clamp(26px, 4vw, 42px);
+    line-height: 1.1;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    max-width: 780px;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--orange);
+  }
+
+  .hero-sub {
+    font-size: 15px;
+    color: var(--steel-hi);
+    max-width: 640px;
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .meta-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    background: var(--bg-inset);
+    padding: 6px 12px;
+    border-radius: 2px;
+  }
+
+  .meta-chip .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+    flex-shrink: 0;
+  }
+
+  .meta-chip .dot.orange { background: var(--orange); }
+  .meta-chip .dot.amber  { background: var(--amber); }
+
+  /* ── LAYOUT ───────────────────────────────────── */
+  .page-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* ── SECTION LABEL ──────────────────────────── */
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 12px;
+    padding-top: 48px;
+    border-top: 1px solid var(--border);
+    margin-top: 48px;
+  }
+
+  .section-label:first-of-type { border-top: none; padding-top: 40px; }
+
+  h2 {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 800;
+    font-size: clamp(20px, 2.5vw, 28px);
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+    line-height: 1.15;
+  }
+
+  h3 {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  p {
+    color: var(--text-body);
+    font-size: 14px;
+    line-height: 1.7;
+    margin-bottom: 12px;
+    max-width: 78ch;
+  }
+
+  p:last-child { margin-bottom: 0; }
+
+  /* ── COMPLIANCE BAND ─────────────────────────── */
+  .compliance-band {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--orange);
+    padding: 20px 24px;
+    margin: 24px 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+
+  .compliance-item {}
+
+  .compliance-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .compliance-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  .compliance-value.warn { color: var(--amber); }
+  .compliance-value.ok   { color: var(--teal); }
+  .compliance-value.alert { color: var(--orange); }
+
+  .compliance-note {
+    font-size: 11px;
+    color: var(--steel);
+    margin-top: 2px;
+  }
+
+  /* ── SOURCE BASELINE TABLE ────────────────────── */
+  .source-table-wrap {
+    overflow-x: auto;
+    margin: 20px 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+
+  thead tr {
+    background: var(--bg-inset);
+    border-bottom: 1px solid var(--border-hi);
+  }
+
+  thead th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  tbody tr:hover { background: var(--bg-card); }
+
+  tbody td {
+    padding: 10px 14px;
+    color: var(--text-body);
+    vertical-align: middle;
+  }
+
+  td.source-name {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  td.dba-hi  { color: var(--red); font-weight: 700; }
+  td.dba-mid { color: var(--amber); font-weight: 700; }
+  td.dba-lo  { color: var(--green); font-weight: 700; }
+
+  td .freq-tag {
+    background: var(--bg-inset);
+    border: 1px solid var(--border);
+    color: var(--steel);
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 2px;
+    margin-left: 4px;
+  }
+
+  /* ── LAYER CARDS ─────────────────────────────── */
+  .layer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .layer-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 22px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .layer-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--layer-accent, var(--steel));
+  }
+
+  .layer-card.tier-1 { --layer-accent: var(--orange); }
+  .layer-card.tier-2 { --layer-accent: var(--teal); }
+  .layer-card.tier-3 { --layer-accent: var(--amber); }
+  .layer-card.tier-4 { --layer-accent: var(--steel-hi); }
+
+  .layer-tier {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--layer-accent, var(--steel));
+    margin-bottom: 8px;
+  }
+
+  .layer-card h3 { margin-bottom: 10px; font-size: 15px; }
+
+  .layer-body {
+    font-size: 13px;
+    color: var(--text-body);
+    line-height: 1.65;
+    margin-bottom: 14px;
+  }
+
+  .attn-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--bg-inset);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    color: var(--layer-accent, var(--steel));
+    border-radius: 2px;
+    margin-right: 6px;
+    margin-top: 4px;
+  }
+
+  /* ── DIAGRAM: noise path ─────────────────────── */
+  .diagram-wrap {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 28px 24px;
+    margin: 24px 0;
+    overflow-x: auto;
+  }
+
+  .noise-path {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    min-width: 640px;
+  }
+
+  .np-node {
+    flex: 1;
+    text-align: center;
+    padding: 12px 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    position: relative;
+  }
+
+  .np-node .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .np-node .dba {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .np-node.source .dba  { color: var(--red); }
+  .np-node.mid .dba     { color: var(--amber); }
+  .np-node.target .dba  { color: var(--teal); }
+
+  .np-node .sublabel {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .np-arrow {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 4px;
+    position: relative;
+  }
+
+  .np-arrow .line {
+    width: 40px;
+    height: 1px;
+    background: var(--border-hi);
+    position: relative;
+  }
+
+  .np-arrow .line::after {
+    content: '›';
+    position: absolute;
+    right: -5px;
+    top: -9px;
+    color: var(--border-hi);
+    font-size: 16px;
+  }
+
+  .np-arrow .delta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--teal);
+    margin-top: 6px;
+    white-space: nowrap;
+  }
+
+  .diagram-caption {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 16px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── SPEC PANELS ─────────────────────────────── */
+  .spec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin: 20px 0;
+  }
+
+  .spec-panel {
+    background: var(--bg-inset);
+    border: 1px solid var(--border);
+    padding: 18px;
+  }
+
+  .spec-panel .sp-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sp-head .sp-title {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  .sp-head .sp-brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--teal);
+    letter-spacing: 0.06em;
+  }
+
+  .spec-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(37,45,56,0.5);
+    gap: 12px;
+  }
+
+  .spec-row:last-child { border-bottom: none; }
+
+  .spec-key {
+    font-size: 12px;
+    color: var(--steel);
+    flex: 1;
+  }
+
+  .spec-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-primary);
+    text-align: right;
+    flex: 0 0 auto;
+    font-weight: 500;
+  }
+
+  .spec-val.hi { color: var(--teal); }
+  .spec-val.warn { color: var(--amber); }
+
+  /* ── MONITORING PROTOCOL ─────────────────────── */
+  .protocol-steps {
+    margin: 20px 0;
+    display: grid;
+    gap: 2px;
+  }
+
+  .proto-step {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 14px 18px;
+  }
+
+  .proto-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--orange);
+    text-align: center;
+  }
+
+  .proto-body { }
+  .proto-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+  .proto-desc {
+    font-size: 12px;
+    color: var(--steel);
+    line-height: 1.5;
+  }
+
+  .proto-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    white-space: nowrap;
+    background: var(--bg-inset);
+  }
+
+  .proto-badge.active { border-color: var(--teal-dim); color: var(--teal); }
+  .proto-badge.warn   { border-color: var(--orange-dim); color: var(--orange); }
+
+  /* ── FREQUENCY CHART ─────────────────────────── */
+  .freq-chart {
+    margin: 20px 0;
+    background: var(--bg-inset);
+    border: 1px solid var(--border);
+    padding: 20px;
+  }
+
+  .freq-chart-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .octave-row {
+    display: flex;
+    gap: 6px;
+    align-items: flex-end;
+    height: 100px;
+    margin-bottom: 8px;
+  }
+
+  .oct-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .oct-bar-wrap {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .oct-bar {
+    width: 80%;
+    border-radius: 2px 2px 0 0;
+    transition: height 0.4s ease;
+    position: relative;
+  }
+
+  .oct-bar.exhaust { background: var(--orange); opacity: 0.85; }
+  .oct-bar.intake  { background: var(--teal); opacity: 0.75; }
+  .oct-bar.encl    { background: var(--steel); opacity: 0.5; }
+
+  .oct-freq {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .oct-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .leg-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--steel);
+  }
+
+  .leg-swatch {
+    width: 12px; height: 10px;
+    border-radius: 1px;
+  }
+
+  .leg-swatch.exhaust { background: var(--orange); opacity: 0.85; }
+  .leg-swatch.intake  { background: var(--teal); opacity: 0.75; }
+  .leg-swatch.encl    { background: var(--steel); opacity: 0.5; }
+
+  /* ── ALERT CALLOUT ───────────────────────────── */
+  .callout {
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    margin: 20px 0;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .callout.info { border-left: 3px solid var(--teal); background: var(--teal-glow); }
+  .callout.warn { border-left: 3px solid var(--amber); background: rgba(245,166,35,0.06); }
+  .callout.critical { border-left: 3px solid var(--orange); background: var(--orange-glow); }
+
+  .callout-icon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 7px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .callout.info .callout-icon { color: var(--teal); background: rgba(41,197,180,0.15); }
+  .callout.warn .callout-icon { color: var(--amber); background: rgba(245,166,35,0.15); }
+  .callout.critical .callout-icon { color: var(--orange); background: var(--orange-glow); }
+
+  .callout-body {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-body);
+  }
+
+  .callout-body strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  /* ── FOOTER ──────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 32px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 60px;
+    background: var(--bg-panel);
+  }
+
+  .footer-org {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  .footer-org span { color: var(--orange); }
+
+  .logomark {
+    display: block;
+    filter:
+      drop-shadow(0 0 3px rgba(255,255,255,.95))
+      drop-shadow(0 0 9px rgba(255,255,255,.65))
+      drop-shadow(0 0 21px rgba(255,255,255,.35))
+      drop-shadow(0 0 45px rgba(255,199,44,.20));
+  }
+
+  .footer-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-align: right;
+  }
+
+  /* ── UTILITY ─────────────────────────────────── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 20px 0;
+  }
+
+  @media (max-width: 680px) {
+    .two-col { grid-template-columns: 1fr; }
+    .layer-grid { grid-template-columns: 1fr; }
+    .spec-grid { grid-template-columns: 1fr; }
+    header { padding: 0 16px; }
+    .page-wrap { padding: 0 16px; }
+    .hero { padding: 32px 16px 28px; }
+    .proto-step { grid-template-columns: 32px 1fr; }
+    .proto-badge { display: none; }
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text-code);
+    background: var(--bg-inset);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+
+  .inline-ref {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--orange);
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══════════════════════════════════════ -->
+<header>
+  <div class="wordmark">The <span>FixOurStreets216</span> Project</div>
+  <div class="doc-id">FOS216-NOISE-GT-001 · REV A · 2026-06</div>
+</header>
+
+<!-- ══ HERO ════════════════════════════════════════ -->
+<div class="hero">
+  <div class="page-wrap">
+    <div class="hero-eyebrow">Industrial Power Campus · Fenceline Noise Control</div>
+    <h1>Gas Turbine &amp; Exhaust Stack<br><em>Noise Minimization</em> Guide</h1>
+    <p class="hero-sub">
+      Engineering controls, acoustic treatment strategies, and monitoring protocols to bring gas turbine–exhaust stack noise below Cleveland's municipal threshold — scoped for the hyperscale data center fenceline context.
+    </p>
+    <div class="hero-meta">
+      <div class="meta-chip"><span class="dot orange"></span>Primary Units: Kawasaki L30A · GPB17MMX</div>
+      <div class="meta-chip"><span class="dot"></span>Code Ref: Cleveland Ord. §605.10(b)(5)</div>
+      <div class="meta-chip"><span class="dot amber"></span>Governing Standard: 65 dBA Day / 55 dBA Night</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN CONTENT ════════════════════════════════ -->
+<div class="page-wrap">
+
+  <!-- ─ REGULATORY BASIS ─────────────────────────── -->
+  <div class="section-label">01 · Regulatory Basis</div>
+  <h2>Cleveland Noise Code &amp; Applicable Thresholds</h2>
+
+  <p>
+    Cleveland's codified noise standard is primarily a <strong>nuisance-based</strong> framework under <span class="inline-ref">Chapter 605.10</span> of the Codified Ordinances. Section 605.10(b)(5) specifically prohibits "the unreasonable discharge into the open air of the exhaust of any steam engine, stationary internal combustion engine, motor vehicle or motor boat engine." Gas turbines operating on the campus fall directly within scope of this provision.
+  </p>
+  <p>
+    Ohio has no statewide dBA limit for industrial stationary sources — regulation is fully delegated to municipalities. Cleveland's ordinance does not specify explicit octave-band limits, but enforcement practice and permit conditions applied by the Department of Building &amp; Housing and Ohio EPA PTIO (Permit-to-Install and Operate) processes align with the statewide <em>de facto</em> benchmarks applied by other industrial-zone authorities in Northeast Ohio. For hyperscale facility permitting and community compliance planning, The FixOurStreets216 Project applies the following binding design targets:
+  </p>
+
+  <div class="compliance-band">
+    <div class="compliance-item">
+      <div class="compliance-label">Daytime Limit (07:00–22:00)</div>
+      <div class="compliance-value warn">65 dBA</div>
+      <div class="compliance-note">Property line of nearest receptor — A-weighted</div>
+    </div>
+    <div class="compliance-item">
+      <div class="compliance-label">Nighttime Limit (22:00–07:00)</div>
+      <div class="compliance-value alert">55 dBA</div>
+      <div class="compliance-note">Cleveland quiet hours enforced per §605.10</div>
+    </div>
+    <div class="compliance-item">
+      <div class="compliance-label">Design Target (FOS216 Internal)</div>
+      <div class="compliance-value ok">≤ 60 dBA</div>
+      <div class="compliance-note">5 dBA margin below daytime limit at fenceline</div>
+    </div>
+    <div class="compliance-item">
+      <div class="compliance-label">Industrial Zone Tolerance</div>
+      <div class="compliance-value ok">70–80 dBA</div>
+      <div class="compliance-note">At source boundary (not fenceline) — permissive zone</div>
+    </div>
+  </div>
+
+  <div class="callout critical">
+    <div class="callout-icon">!</div>
+    <div class="callout-body">
+      <strong>Exhaust-specific clause:</strong> §605.10(b)(5) applies to <em>any</em> stationary combustion exhaust discharge, regardless of zoning — it is not limited to residential adjacency. Even in a purely industrial corridor, the City can cite an unreasonably loud exhaust discharge. The nighttime 55 dBA standard should be treated as the hard ceiling for 24/7 generation equipment.
+    </div>
+  </div>
+
+  <!-- ─ NOISE SOURCES ─────────────────────────────── -->
+  <div class="section-label">02 · Source Identification</div>
+  <h2>Turbine–Stack Noise Sources &amp; Baseline Levels</h2>
+
+  <p>
+    A gas turbine power package emits noise through several distinct pathways. Understanding which pathway dominates at which frequency is the foundation of any effective treatment strategy. The Kawasaki L30A and GPB17MMX packages ship from the factory with acoustic enclosures rated at <strong>85 dBA at 1 m</strong> to the side of the enclosure — the raw exhaust and intake discharge, not enclosure shell radiation, typically govern fenceline performance at distance.
+  </p>
+
+  <div class="source-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Noise Pathway</th>
+          <th>Unmitigated Source Level</th>
+          <th>Dominant Frequencies</th>
+          <th>Primary Control</th>
+          <th>Treatment Priority</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="source-name">Exhaust stack discharge</td>
+          <td class="dba-hi">105–115 dBA</td>
+          <td>63–250 Hz <span class="freq-tag">LF</span></td>
+          <td>Inline exhaust silencer</td>
+          <td class="dba-hi">CRITICAL</td>
+        </tr>
+        <tr>
+          <td class="source-name">Inlet air intake</td>
+          <td class="dba-hi">100–110 dBA</td>
+          <td>500–4000 Hz <span class="freq-tag">MF/HF</span></td>
+          <td>Inlet silencer / filter house</td>
+          <td class="dba-hi">CRITICAL</td>
+        </tr>
+        <tr>
+          <td class="source-name">Combustion tone / pressure pulsation</td>
+          <td class="dba-mid">90–98 dBA</td>
+          <td>100–500 Hz <span class="freq-tag">Tonal</span></td>
+          <td>DLE combustor + enclosure</td>
+          <td class="dba-mid">HIGH</td>
+        </tr>
+        <tr>
+          <td class="source-name">Acoustic enclosure shell radiation</td>
+          <td class="dba-mid">85–90 dBA at 1 m</td>
+          <td>Broadband <span class="freq-tag">BB</span></td>
+          <td>Factory enclosure (standard)</td>
+          <td class="dba-mid">HIGH</td>
+        </tr>
+        <tr>
+          <td class="source-name">HRSG / bypass stack casing</td>
+          <td class="dba-mid">80–90 dBA</td>
+          <td>125–1000 Hz <span class="freq-tag">BB</span></td>
+          <td>Duct lagging + vent silencer</td>
+          <td class="dba-mid">HIGH</td>
+        </tr>
+        <tr>
+          <td class="source-name">Generator &amp; gearbox radiation</td>
+          <td class="dba-mid">80–88 dBA</td>
+          <td>60 Hz tonal + harmonics <span class="freq-tag">Tonal</span></td>
+          <td>Enclosure + vibration isolation</td>
+          <td class="dba-lo">MOD</td>
+        </tr>
+        <tr>
+          <td class="source-name">Cooling / ventilation fans</td>
+          <td class="dba-mid">78–85 dBA</td>
+          <td>BPF tonal <span class="freq-tag">Tonal</span></td>
+          <td>Low-BPF fan selection + duct</td>
+          <td class="dba-lo">MOD</td>
+        </tr>
+        <tr>
+          <td class="source-name">Pressure-relief / vent valves</td>
+          <td class="dba-hi">90–120 dBA (event)</td>
+          <td>1000–8000 Hz <span class="freq-tag">HF</span></td>
+          <td>Vent silencer on all PRVs</td>
+          <td class="dba-mid">HIGH (event)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    The Kawasaki DLE (Dry Low Emission) combustor used on the L30A and GPB17MMX series substantially reduces combustion tone compared to conventional diffusion combustors — this is a built-in acoustic advantage in addition to the NOx benefit. The remaining dominant sources are the exhaust and inlet discharge openings.
+  </p>
+
+  <!-- ─ FREQUENCY CHART ──────────────────────────── -->
+  <div class="freq-chart">
+    <div class="freq-chart-title">Octave-Band Noise Signature — Turbine Package (Relative Levels, Unmitigated)</div>
+    <div class="octave-row">
+      <!-- bars scaled relative to 115 dBA max = 100px -->
+      <!-- 63Hz: exhaust 115, intake 85, encl 72 -->
+      <div class="oct-col">
+        <div class="oct-bar-wrap">
+          <div class="oct-bar exhaust" style="height:100%"></div>
+        </div>
+        <div class="oct-freq">63 Hz</div>
+      </div>
+      <!-- 125Hz: exhaust 112, intake 88, encl 78 -->
+      <div class="oct-col">
+        <div class="oct-bar-wrap">
+          <div class="oct-bar exhaust" style="height:97%"></div>
+        </div>
+        <div class="oct-freq">125</div>
+      </div>
+      <!-- 250Hz: exhaust 105, intake 92, encl 80 -->
+      <div class="oct-col">
+        <div class="oct-bar-wrap">
+          <div class="oct-bar exhaust" style="height:91%"></div>
+        </div>
+        <div class="oct-freq">250</div>
+      </div>
+      <!-- 500Hz: exhaust 95, intake 100, encl 78 -->
+      <div class="oct-col">
+        <div class="oct-bar-wrap">
+          <div class="oct-bar exhaust" style="height:83%"></div>
+        </div>
+        <div class="oct-freq">500</div>
+      </div>
+      <!-- 1kHz: exhaust 88, intake 105, encl 75 -->
+      <div class="oct-col">
+        <div class="oct-bar-wrap">
+          <div class="oct-bar exhaust" style="height:77%"></div>
+        </div>
+        <div class="oct-freq">1 kHz</div>
+      </div>
+      <!-- 2kHz: exhaust 80, intake 98, encl 70 -->
+      <div class="oct-col">
+        <div class="oct-bar-wrap">
+          <div class="oct-bar exhaust" style="height:70%"></div>
+        </div>
+        <div class="oct-freq">2 kHz</div>
+      </div>
+      <!-- 4kHz: exhaust 70, intake 90, encl 62 -->
+      <div class="oct-col">
+        <div class="oct-bar-wrap">
+          <div class="oct-bar exhaust" style="height:61%"></div>
+        </div>
+        <div class="oct-freq">4 kHz</div>
+      </div>
+      <!-- 8kHz: exhaust 58, intake 78, encl 52 -->
+      <div class="oct-col">
+        <div class="oct-bar-wrap">
+          <div class="oct-bar exhaust" style="height:50%"></div>
+        </div>
+        <div class="oct-freq">8 kHz</div>
+      </div>
+    </div>
+    <div class="oct-legend">
+      <div class="leg-item"><div class="leg-swatch exhaust"></div>Exhaust discharge (dominant source)</div>
+    </div>
+    <p style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);margin-top:10px;margin-bottom:0;">
+      Key insight: exhaust energy peaks in the 63–250 Hz low-frequency bands — these require thick absorptive silencer baffles (&gt;150 mm mineral wool) or reactive expansion chambers; thin splitter silencers tuned for midrange will underperform here.
+    </p>
+  </div>
+
+  <!-- ─ NOISE PATH DIAGRAM ─────────────────────── -->
+  <div class="diagram-wrap">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:18px;">
+      Exhaust Noise Reduction Train — Target Path (Single L30A Unit)
+    </div>
+    <div class="noise-path">
+      <div class="np-node source">
+        <div class="label">Raw Exhaust</div>
+        <div class="dba">112 dBA</div>
+        <div class="sublabel">@ turbine exit</div>
+      </div>
+      <div class="np-arrow">
+        <div class="line"></div>
+        <div class="delta">−25 dB</div>
+      </div>
+      <div class="np-node mid">
+        <div class="label">After Silencer</div>
+        <div class="dba">87 dBA</div>
+        <div class="sublabel">inline exhaust</div>
+      </div>
+      <div class="np-arrow">
+        <div class="line"></div>
+        <div class="delta">HRSG body</div>
+      </div>
+      <div class="np-node mid">
+        <div class="label">HRSG Exit</div>
+        <div class="dba">80 dBA</div>
+        <div class="sublabel">+ lagging −7 dB</div>
+      </div>
+      <div class="np-arrow">
+        <div class="line"></div>
+        <div class="delta">stack exit</div>
+      </div>
+      <div class="np-node mid">
+        <div class="label">Stack Top</div>
+        <div class="dba">78 dBA</div>
+        <div class="sublabel">+ vent silencer</div>
+      </div>
+      <div class="np-arrow">
+        <div class="line"></div>
+        <div class="delta">distance −18 dB</div>
+      </div>
+      <div class="np-node target">
+        <div class="label">Fenceline</div>
+        <div class="dba">≤ 60 dBA</div>
+        <div class="sublabel">150 m typical</div>
+      </div>
+    </div>
+    <div class="diagram-caption">
+      Illustrative single-unit budget. Multi-unit campus requires energy-sum analysis — each doubling of source count adds ~3 dB. A 4-unit campus adds ~6 dB; treatment must account for combined stack.
+    </div>
+  </div>
+
+  <!-- ─ CONTROL LAYERS ────────────────────────────── -->
+  <div class="section-label">03 · Engineering Controls</div>
+  <h2>Four-Layer Treatment Strategy</h2>
+
+  <p>
+    Achieving ≤ 60 dBA at the fenceline from a gas turbine operating at 110+ dBA at the exhaust exit requires a minimum of ~50 dBA combined attenuation through geometric spreading, silencing, and secondary barriers. No single measure achieves this — the following four layers must be stacked in sequence.
+  </p>
+
+  <div class="layer-grid">
+    <!-- LAYER 1 -->
+    <div class="layer-card tier-1">
+      <div class="layer-tier">Layer 1 · Primary Path Control</div>
+      <h3>Inline Exhaust &amp; Inlet Silencers</h3>
+      <p class="layer-body">
+        The highest-ROI intervention. A purpose-engineered absorptive/reactive hybrid silencer inserted in the exhaust duct immediately downstream of the turbine exit (before the HRSG inlet or bypass stack) delivers 20–35 dBA of broadband attenuation. For the L30A's exhaust temperature (~500 °C), silencers must use high-density mineral wool (min. 200 kg/m³), stainless liner, and perforated facing rated for continuous high-temperature service.
+        <br><br>
+        An inlet air silencer in the filter house/intake plenum targets the 500–4000 Hz band. Standard 2-stage filtration housings from Kawasaki include a basic attenuating splitter — upgrade to a custom deep-insertion silencer for campus installations.
+      </p>
+      <span class="attn-badge">−25 to −35 dBA exhaust</span>
+      <span class="attn-badge">−15 to −20 dBA inlet</span>
+    </div>
+
+    <!-- LAYER 2 -->
+    <div class="layer-card tier-2">
+      <div class="layer-tier">Layer 2 · HRSG & Duct Treatment</div>
+      <h3>Casing Lagging &amp; Vent Silencers</h3>
+      <p class="layer-body">
+        HRSG module casing and interconnecting exhaust ductwork radiates aerodynamic and structure-borne noise across the 125–1000 Hz band. Acoustic lagging (50–75 mm mineral wool blanket + reinforced foil or steel jacket) achieves −8 to −12 dBA of shell-radiated noise. All pressure-relief valves and blowdown vents must be fitted with purpose-designed vent silencers — these event sources can spike to 120 dBA and are explicitly targeted by §605.10(b)(5). Use reactive-type vent silencers (Solberg or Maxim equivalent) rated for the vent orifice Cv.
+        <br><br>
+        The HRSG stack itself should incorporate internally-baffled acoustical panels at the top section where structural geometry allows — this provides −5 to −8 dBA of additional vertical stack exit attenuation.
+      </p>
+      <span class="attn-badge">−8 to −12 dBA lagging</span>
+      <span class="attn-badge">Vent silencers mandatory</span>
+    </div>
+
+    <!-- LAYER 3 -->
+    <div class="layer-card tier-3">
+      <div class="layer-tier">Layer 3 · Secondary Barriers</div>
+      <h3>Acoustic Wall / Berm System</h3>
+      <p class="layer-body">
+        When residences or sensitive receptors exist within 300 m of the plant boundary, an acoustic barrier wall (masonry, precast concrete, or mass-loaded modular panel) placed between the turbine package and the fenceline provides −5 to −15 dBA depending on height and geometry relative to the sound path. Barrier effectiveness is frequency-dependent: barriers perform best above 250 Hz and offer limited benefit for the 63–125 Hz octave bands that dominate turbine exhaust.
+        <br><br>
+        Earth berms with planted facing provide equivalent IL with the added benefit of absorbing low-frequency energy more effectively than rigid reflective walls. A 3–4 m berm with sloped profile and dense vegetation topping is recommended where site geometry permits.
+      </p>
+      <span class="attn-badge">−5 to −15 dBA (geometry-dependent)</span>
+      <span class="attn-badge">LF limited — supplement with silencer</span>
+    </div>
+
+    <!-- LAYER 4 -->
+    <div class="layer-card tier-4">
+      <div class="layer-tier">Layer 4 · Geometric & Operational</div>
+      <h3>Siting, Stack Height &amp; Load Management</h3>
+      <p class="layer-body">
+        Stack height directly affects ground-level fenceline levels — the inverse square law delivers approximately −6 dB per doubling of distance. A 30 m stack discharging vertically at 78 dBA will arrive at a 150 m fenceline at approximately 56 dBA (before propagation adjustments). Orienting exhaust stacks to discharge away from sensitive receptors and maximizing horizontal setback are zero-cost interventions.
+        <br><br>
+        For nighttime compliance (55 dBA limit), turbines operating at reduced load (turn-down to 50–70% output) reduce source levels by −3 to −6 dBA depending on the unit. The Kawasaki L30A DLE combustor is optimized for part-load stability — nighttime turn-down is operationally practical without combustion instability.
+      </p>
+      <span class="attn-badge">Stack height matters</span>
+      <span class="attn-badge">Night turn-down −3 to −6 dBA</span>
+    </div>
+  </div>
+
+  <!-- ─ VENDOR SPECS ─────────────────────────────── -->
+  <div class="section-label">04 · Equipment Specifications</div>
+  <h2>Recommended Acoustic Components</h2>
+
+  <p>
+    The following vendor-specific equipment and specifications apply to the Kawasaki L30A and GPB17MMX installations in the IPGD generation mix. All silencer selections must be confirmed against final duct geometry and flow conditions in the site-specific acoustic study.
+  </p>
+
+  <div class="spec-grid">
+    <div class="spec-panel">
+      <div class="sp-head">
+        <div class="sp-title">Inline Exhaust Silencer</div>
+        <div class="sp-brand">IAC Acoustics / SPL Control</div>
+      </div>
+      <div class="spec-row"><span class="spec-key">Type</span><span class="spec-val hi">Hybrid Absorptive/Reactive</span></div>
+      <div class="spec-row"><span class="spec-key">Target attenuation</span><span class="spec-val hi">25–35 dBA broadband</span></div>
+      <div class="spec-row"><span class="spec-key">Temp. rating</span><span class="spec-val">600 °C continuous</span></div>
+      <div class="spec-row"><span class="spec-key">Media</span><span class="spec-val">200 kg/m³ mineral wool, SS liner</span></div>
+      <div class="spec-row"><span class="spec-key">Pressure drop target</span><span class="spec-val warn">&lt; 1.5 kPa</span></div>
+      <div class="spec-row"><span class="spec-key">LF performance (63 Hz)</span><span class="spec-val">≥ 18 dB insertion loss</span></div>
+      <div class="spec-row"><span class="spec-key">Reference design</span><span class="spec-val">IAC GTS-HC Series</span></div>
+    </div>
+
+    <div class="spec-panel">
+      <div class="sp-head">
+        <div class="sp-title">Inlet Air Silencer</div>
+        <div class="sp-brand">Peerless Mfg / Aarding (CECO)</div>
+      </div>
+      <div class="spec-row"><span class="spec-key">Type</span><span class="spec-val hi">Deep-insertion splitter array</span></div>
+      <div class="spec-row"><span class="spec-key">Target attenuation</span><span class="spec-val hi">15–22 dBA (500–4kHz)</span></div>
+      <div class="spec-row"><span class="spec-key">Baffle face velocity</span><span class="spec-val">≤ 4.5 m/s (min. noise gen.)</span></div>
+      <div class="spec-row"><span class="spec-key">Self-noise target</span><span class="spec-val warn">&lt; 65 dBA at 10 m</span></div>
+      <div class="spec-row"><span class="spec-key">Filtration integration</span><span class="spec-val">2-stage + pulse-clean</span></div>
+      <div class="spec-row"><span class="spec-key">Reference</span><span class="spec-val">Peerless GT Inlet System</span></div>
+    </div>
+
+    <div class="spec-panel">
+      <div class="sp-head">
+        <div class="sp-title">HRSG / Bypass Stack Lagging</div>
+        <div class="sp-brand">Thermaxx / Insultech</div>
+      </div>
+      <div class="spec-row"><span class="spec-key">System</span><span class="spec-val hi">Acoustic + thermal blanket</span></div>
+      <div class="spec-row"><span class="spec-key">Construction</span><span class="spec-val">75 mm mineral wool + SS cladding</span></div>
+      <div class="spec-row"><span class="spec-key">Attenuation target</span><span class="spec-val hi">−10 dBA shell radiation</span></div>
+      <div class="spec-row"><span class="spec-key">Max surface temp</span><span class="spec-val">650 °C process side</span></div>
+      <div class="spec-row"><span class="spec-key">Application</span><span class="spec-val">All duct sections &gt; DN600</span></div>
+      <div class="spec-row"><span class="spec-key">Note</span><span class="spec-val warn">Include all elbow sections</span></div>
+    </div>
+
+    <div class="spec-panel">
+      <div class="sp-head">
+        <div class="sp-title">Vent / PRV Silencer</div>
+        <div class="sp-brand">Solberg Mfg / Maxim Silencers</div>
+      </div>
+      <div class="spec-row"><span class="spec-key">Type</span><span class="spec-val hi">Reactive expansion + absorptive</span></div>
+      <div class="spec-row"><span class="spec-key">Target attenuation</span><span class="spec-val hi">30–45 dBA (event peak)</span></div>
+      <div class="spec-row"><span class="spec-key">Pressure class</span><span class="spec-val">ANSI 600 (min. for PRV apps)</span></div>
+      <div class="spec-row"><span class="spec-key">Coverage</span><span class="spec-val">All PRVs, blowdown, SV vents</span></div>
+      <div class="spec-row"><span class="spec-key">Reference</span><span class="spec-val">Maxim Type DMS/ES Series</span></div>
+      <div class="spec-row"><span class="spec-key">Permit note</span><span class="spec-val warn">Required by Ohio EPA PTIO</span></div>
+    </div>
+
+    <div class="spec-panel">
+      <div class="sp-head">
+        <div class="sp-title">Acoustic Barrier Wall</div>
+        <div class="sp-brand">Kinetics Noise Control</div>
+      </div>
+      <div class="spec-row"><span class="spec-key">Panel type</span><span class="spec-val">Mass-loaded precast composite</span></div>
+      <div class="spec-row"><span class="spec-key">Min. surface density</span><span class="spec-val hi">≥ 20 kg/m² (STC 50+)</span></div>
+      <div class="spec-row"><span class="spec-key">Height above source</span><span class="spec-val">Calculated per site geometry</span></div>
+      <div class="spec-row"><span class="spec-key">LF caveat</span><span class="spec-val warn">Limited IL below 125 Hz</span></div>
+      <div class="spec-row"><span class="spec-key">Treated face</span><span class="spec-val">Absorptive face toward turbine</span></div>
+      <div class="spec-row"><span class="spec-key">Reference</span><span class="spec-val">Kinetics SoundBlok™ or equiv.</span></div>
+    </div>
+
+    <div class="spec-panel">
+      <div class="sp-head">
+        <div class="sp-title">Vibration Isolation</div>
+        <div class="sp-brand">Mason Industries</div>
+      </div>
+      <div class="spec-row"><span class="spec-key">Type</span><span class="spec-val hi">Spring + elastomeric isolator</span></div>
+      <div class="spec-row"><span class="spec-key">Natural frequency target</span><span class="spec-val">≤ 3 Hz (fn)</span></div>
+      <div class="spec-row"><span class="spec-key">Application</span><span class="spec-val">Turbine base, HRSG connections</span></div>
+      <div class="spec-row"><span class="spec-key">Flexible connection</span><span class="spec-val">All inlet/exhaust duct ties</span></div>
+      <div class="spec-row"><span class="spec-key">Target IL</span><span class="spec-val hi">−20 to −30 dB structure-borne</span></div>
+      <div class="spec-row"><span class="spec-key">Reference</span><span class="spec-val">Mason SLR-HDS / Type 30N</span></div>
+    </div>
+  </div>
+
+  <!-- ─ MONITORING ─────────────────────────────────── -->
+  <div class="section-label">05 · Monitoring Protocol</div>
+  <h2>Fenceline Noise Monitoring Program</h2>
+
+  <p>
+    Continuous fenceline monitoring is best practice for any 24/7 generation asset adjacent to mixed-use or residential areas in Cleveland. While §605.10 does not mandate self-monitoring, Ohio EPA PTIO conditions for stationary combustion equipment routinely impose initial commissioning tests and complaint-triggered measurements. The FixOurStreets216 Project recommends the following permanent monitoring architecture.
+  </p>
+
+  <div class="protocol-steps">
+    <div class="proto-step">
+      <div class="proto-num">01</div>
+      <div class="proto-body">
+        <div class="proto-title">Pre-Construction Ambient Baseline Survey</div>
+        <div class="proto-desc">Minimum 7-day continuous ambient measurement at proposed fenceline stations before any equipment installation. Establishes daytime Leq and nighttime Leq for comparison post-startup. Measurement per ANSI S12.18 / ISO 1996-2.</div>
+      </div>
+      <div class="proto-badge">PRE-PERMIT</div>
+    </div>
+    <div class="proto-step">
+      <div class="proto-num">02</div>
+      <div class="proto-body">
+        <div class="proto-title">Commissioning Performance Test</div>
+        <div class="proto-desc">Full-load and part-load noise emission test at fenceline and at 50 m / 100 m intermediate points during commissioning. Octave-band measurement per ANSI S1.13. Silencer IL verification against design guarantee. Results submitted to Ohio EPA with PTIO startup notification.</div>
+      </div>
+      <div class="proto-badge">STARTUP</div>
+    </div>
+    <div class="proto-step">
+      <div class="proto-num">03</div>
+      <div class="proto-body">
+        <div class="proto-title">Permanent Fenceline Monitoring Network</div>
+        <div class="proto-desc">Install minimum 3 permanently-mounted Class 1 sound level meters at cardinal fenceline points (nearest receptor on each exposure face). Log Leq, Lmax, and L90 at 1-minute intervals. Integration with site SCADA enables automatic alert when Leq approaches 58 dBA (2 dB warning margin before 60 dBA target). Vendor: Svantek SV 307A or Norsonic Nor145 environmental noise monitors.</div>
+      </div>
+      <div class="proto-badge active">ONGOING</div>
+    </div>
+    <div class="proto-step">
+      <div class="proto-num">04</div>
+      <div class="proto-body">
+        <div class="proto-title">Annual Verification &amp; Silencer Condition Inspection</div>
+        <div class="proto-desc">Third-party acoustic survey annually per OSHA/ANSI S12.18 to verify continued compliance. Visual and boroscope inspection of exhaust silencer internals for mineral wool degradation, baffle erosion, or structural damage (high-temperature exhaust environments degrade absorptive media over time — plan for 7–10 year media replacement cycle).</div>
+      </div>
+      <div class="proto-badge active">ANNUAL</div>
+    </div>
+    <div class="proto-step">
+      <div class="proto-num">05</div>
+      <div class="proto-body">
+        <div class="proto-title">Complaint Response Protocol</div>
+        <div class="proto-desc">Any complaint received from City of Cleveland Division of Environment &amp; Sustainability or an adjacent property owner triggers a 24-hour attended measurement by a DPLE-certified acoustician. If Leq at fenceline exceeds 63 dBA daytime or 53 dBA nighttime (pre-enforcement margin), initiate corrective action plan within 72 hours per §605.10 compliance posture.</div>
+      </div>
+      <div class="proto-badge warn">EVENT</div>
+    </div>
+  </div>
+
+  <!-- ─ DESIGN CHECKLIST ────────────────────────── -->
+  <div class="section-label">06 · Design Checklist</div>
+  <h2>Pre-Permit Acoustic Design Requirements</h2>
+
+  <div class="callout info">
+    <div class="callout-icon">i</div>
+    <div class="callout-body">
+      All items below should be resolved at the design development stage before the Ohio EPA PTIO application is submitted. The PTIO application for a stationary combustion source (&gt; 10 MMBtu/hr) must include a noise impact assessment for facilities within 1 km of a residential or mixed-use zone.
+    </div>
+  </div>
+
+  <div class="source-table-wrap" style="margin-top:16px;">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Requirement</th>
+          <th>Responsible Party</th>
+          <th>Timing</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>A-01</code></td>
+          <td class="source-name">Site-specific acoustic propagation model (ISO 9613-2 or NMPB)</td>
+          <td>Acoustical consultant</td>
+          <td>DD Phase</td>
+          <td class="dba-mid">REQUIRED</td>
+        </tr>
+        <tr>
+          <td><code>A-02</code></td>
+          <td class="source-name">Exhaust silencer acoustic performance guarantee from vendor</td>
+          <td>Silencer vendor</td>
+          <td>Design Development</td>
+          <td class="dba-mid">REQUIRED</td>
+        </tr>
+        <tr>
+          <td><code>A-03</code></td>
+          <td class="source-name">Inlet silencer and filter house noise emission budget</td>
+          <td>Turbine package / vendor</td>
+          <td>Procurement</td>
+          <td class="dba-mid">REQUIRED</td>
+        </tr>
+        <tr>
+          <td><code>A-04</code></td>
+          <td class="source-name">Vent silencer sizing on all PRVs and blowdown valves</td>
+          <td>Process / mechanical engineer</td>
+          <td>P&amp;ID review</td>
+          <td class="dba-mid">REQUIRED</td>
+        </tr>
+        <tr>
+          <td><code>A-05</code></td>
+          <td class="source-name">HRSG casing lagging specification included in equipment spec</td>
+          <td>HRSG vendor / EPC</td>
+          <td>Equipment spec</td>
+          <td class="dba-mid">REQUIRED</td>
+        </tr>
+        <tr>
+          <td><code>A-06</code></td>
+          <td class="source-name">Vibration isolation system on turbine base and all connected pipe</td>
+          <td>Structural / mechanical</td>
+          <td>Foundation design</td>
+          <td class="dba-mid">REQUIRED</td>
+        </tr>
+        <tr>
+          <td><code>A-07</code></td>
+          <td class="source-name">Stack height confirmed in propagation model (minimum 25 m)</td>
+          <td>Process / civil engineer</td>
+          <td>Schematic design</td>
+          <td class="dba-lo">RECOMMENDED</td>
+        </tr>
+        <tr>
+          <td><code>A-08</code></td>
+          <td class="source-name">Barrier wall / berm siting verified in acoustic model</td>
+          <td>Acoustical consultant</td>
+          <td>Site plan review</td>
+          <td class="dba-lo">SITE-DEPENDENT</td>
+        </tr>
+        <tr>
+          <td><code>A-09</code></td>
+          <td class="source-name">Fenceline monitor procurement and SCADA integration spec</td>
+          <td>Controls / instrumentation</td>
+          <td>Detailed design</td>
+          <td class="dba-lo">RECOMMENDED</td>
+        </tr>
+        <tr>
+          <td><code>A-10</code></td>
+          <td class="source-name">Pre-construction ambient baseline survey completed</td>
+          <td>Acoustical consultant</td>
+          <td>Pre-permit</td>
+          <td class="dba-mid">REQUIRED</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ─ KEY NOTES ─────────────────────────────────── -->
+  <div class="section-label">07 · Key Notes &amp; Cautions</div>
+  <h2>Critical Design &amp; Compliance Cautions</h2>
+
+  <div class="callout warn">
+    <div class="callout-icon">⚠</div>
+    <div class="callout-body">
+      <strong>Multi-unit energy summation:</strong> Each additional turbine unit adds ~3 dBA to the combined source level (energy summation — not simple arithmetic). A 4-unit L30A campus reaches a combined source level ~6 dBA higher than a single unit. All propagation models must use the combined source strength, not per-unit values.
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-icon">⚠</div>
+    <div class="callout-body">
+      <strong>Low-frequency limits of barriers:</strong> Acoustic barriers are nearly ineffective at the 63–125 Hz octave bands that dominate turbine exhaust. Do not plan to meet compliance with barriers alone. Inline exhaust silencers with verified low-frequency IL performance are non-negotiable for Cleveland §605.10(b)(5) compliance.
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-icon">⚠</div>
+    <div class="callout-body">
+      <strong>Silencer media degradation at high temperature:</strong> The L30A exhaust exits at ~500 °C. Conventional fiberglass silencer media degrades rapidly above 450 °C. Specify high-temperature mineral wool (e.g., Superwool 607 or equivalent, rated to 650 °C) and confirm the baffle facing design prevents erosion of media into the exhaust stream. Plan for inspection at 5 years and media replacement at 8–10 years.
+    </div>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-icon">i</div>
+    <div class="callout-body">
+      <strong>Hydrogen combustion and noise:</strong> The Kawasaki L30A DLE system supports up to 60% H₂ by volume in mixed combustion. Higher hydrogen content increases flame speed and combustion energy but the DLE design controls combustion noise within normal operational ranges. No additional acoustic treatment is required for the H₂ combustion mode specifically, but commissioning noise tests should be conducted at the planned maximum H₂ blend ratio to confirm.
+    </div>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-icon">i</div>
+    <div class="callout-body">
+      <strong>Cleveland §605.10 is complaint-triggered:</strong> Unlike some jurisdictions, Cleveland does not conduct routine industrial noise inspections. Enforcement is primarily complaint-triggered. However, the Ohio EPA PTIO process provides the teeth for pre-permit compliance assurance — conditions in the PTIO can include specific dBA limits, monitoring requirements, and compliance demonstration obligations. Design to the 60 dBA FOS216 internal target, not just the 65 dBA code floor.
+    </div>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<!-- ══ FOOTER ═══════════════════════════════════════ -->
+<footer>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <img class="logomark" src="data:image/png;base64,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" width="44" height="44" alt="The FixOurStreets216 Project logomark">
+    <div>
+      <div class="footer-org">The <span>FixOurStreets216</span> Project</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;font-family:'JetBrains Mono',monospace;">
+        Cleveland, Ohio · Industrial Power Campus Program
+      </div>
+    </div>
+  </div>
+  <div class="footer-meta">
+    FOS216-NOISE-GT-001 REV A<br>
+    Code Ref: Cleveland §605.10(b)(5) · Ohio EPA PTIO<br>
+    Issued: June 2026<br>
+    <span style="color:var(--text-muted);font-size:9px;display:block;margin-top:4px;">
+      Design guidance only — confirm with DPLE acoustician and Ohio EPA prior to permit submission
+    </span>
+  </div>
+</footer>
+
+</body>
+</html>

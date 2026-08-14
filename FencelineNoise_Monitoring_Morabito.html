@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fence Line Noise Monitoring — Morabito Data Campus | FOS216</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg-base:        #0d0f12;
+    --bg-panel:       #141720;
+    --bg-card:        #1a1e2a;
+    --bg-raised:      #20253a;
+    --border:         #2a2f42;
+    --border-bright:  #3a4060;
+
+    --orange:         #f06a00;
+    --orange-dim:     #b04a00;
+    --orange-glow:    rgba(240,106,0,0.15);
+    --teal:           #00b4c8;
+    --teal-dim:       #007f8c;
+    --teal-glow:      rgba(0,180,200,0.12);
+    --steel:          #6e7a99;
+    --steel-dim:      #3e4460;
+
+    --green:          #2dca72;
+    --green-dim:      #1a7a44;
+    --yellow:         #f5c518;
+    --yellow-dim:     #8a6e00;
+    --red:            #e03e3e;
+    --red-dim:        #7a1c1c;
+    --red-glow:       rgba(224,62,62,0.15);
+
+    --text-hi:        #f0f2f8;
+    --text-mid:       #9aa0ba;
+    --text-lo:        #5a617a;
+
+    --mono:           'JetBrains Mono', monospace;
+    --sans:           'Archivo', sans-serif;
+    --radius:         4px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg-base);
+    color: var(--text-hi);
+    font-family: var(--sans);
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .site-header {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 52px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo-mark {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--orange);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid var(--orange-dim);
+    padding: 3px 7px;
+    border-radius: 2px;
+  }
+  .header-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--text-hi);
+    text-transform: uppercase;
+  }
+  .header-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--steel);
+    margin-top: 1px;
+  }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .live-badge {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: 10px; color: var(--teal);
+    font-weight: 500;
+  }
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .clock {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-mid);
+  }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: auto 1fr;
+    min-height: calc(100vh - 52px);
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    grid-row: 1 / 3;
+  }
+  .sidebar-section { padding: 0 16px 24px; }
+  .sidebar-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--steel);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .site-info-block { display: flex; flex-direction: column; gap: 6px; }
+  .info-row { display: flex; justify-content: space-between; align-items: baseline; }
+  .info-key { font-family: var(--mono); font-size: 10px; color: var(--text-lo); }
+  .info-val { font-size: 11px; font-weight: 600; color: var(--text-mid); text-align: right; max-width: 160px; }
+  .info-val.accent { color: var(--orange); }
+  .info-val.teal { color: var(--teal); }
+
+  /* Compliance thresholds table */
+  .threshold-table { width: 100%; border-collapse: collapse; }
+  .threshold-table th {
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    color: var(--text-lo); text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 0 0 6px; text-align: left;
+  }
+  .threshold-table th:last-child { text-align: right; }
+  .threshold-table td {
+    padding: 5px 0; font-size: 11px; color: var(--text-mid);
+    border-top: 1px solid var(--border);
+  }
+  .threshold-table td:last-child {
+    text-align: right; font-family: var(--mono);
+    font-weight: 600; font-size: 12px;
+  }
+  .td-day  { color: var(--yellow); }
+  .td-night { color: var(--teal); }
+  .td-zone { font-size: 10px; }
+
+  /* Monitor point list */
+  .mp-list { display: flex; flex-direction: column; gap: 6px; }
+  .mp-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .mp-item:hover { border-color: var(--border-bright); background: var(--bg-raised); }
+  .mp-item.active { border-color: var(--teal); background: var(--teal-glow); }
+  .mp-item.exceedance { border-color: var(--red); background: var(--red-glow); }
+  .mp-left { display: flex; flex-direction: column; }
+  .mp-id { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--text-hi); }
+  .mp-loc { font-size: 10px; color: var(--text-lo); margin-top: 1px; }
+  .mp-right { text-align: right; }
+  .mp-db {
+    font-family: var(--mono); font-size: 16px; font-weight: 700;
+    line-height: 1;
+  }
+  .mp-db.ok    { color: var(--green); }
+  .mp-db.warn  { color: var(--yellow); }
+  .mp-db.over  { color: var(--red); }
+  .mp-limit { font-family: var(--mono); font-size: 9px; color: var(--text-lo); margin-top: 1px; }
+
+  /* ── TOP BAR (above main) ── */
+  .topbar {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px;
+  }
+  .topbar-kpis { display: flex; gap: 32px; }
+  .kpi-block { display: flex; flex-direction: column; }
+  .kpi-label {
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-lo);
+    margin-bottom: 3px;
+  }
+  .kpi-val {
+    font-family: var(--mono); font-size: 22px; font-weight: 700;
+    line-height: 1; color: var(--text-hi);
+  }
+  .kpi-val.ok    { color: var(--green); }
+  .kpi-val.warn  { color: var(--yellow); }
+  .kpi-val.over  { color: var(--red); }
+  .kpi-sub { font-size: 10px; color: var(--text-lo); margin-top: 2px; }
+
+  .topbar-controls { display: flex; gap: 10px; align-items: center; }
+  .btn {
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 6px 14px; border-radius: var(--radius);
+    border: 1px solid var(--border-bright);
+    background: var(--bg-raised); color: var(--text-mid);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--teal); color: var(--teal); }
+  .btn.primary { background: var(--orange); border-color: var(--orange); color: #fff; }
+  .btn.primary:hover { background: var(--orange-dim); }
+  .time-mode {
+    display: flex; gap: 2px;
+    background: var(--bg-base); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 2px;
+  }
+  .tm-btn {
+    font-family: var(--mono); font-size: 10px; padding: 4px 10px;
+    border-radius: 2px; cursor: pointer; border: none;
+    background: transparent; color: var(--text-lo);
+    transition: all 0.15s;
+  }
+  .tm-btn.active { background: var(--bg-raised); color: var(--teal); }
+
+  /* ── MAIN ── */
+  .main {
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 16px;
+    align-content: start;
+  }
+
+  /* ── PANELS ── */
+  .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .panel.span2 { grid-column: span 2; }
+  .panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .panel-title {
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-mid);
+  }
+  .panel-tag {
+    font-family: var(--mono); font-size: 9px; padding: 2px 7px;
+    border-radius: 2px; font-weight: 600; letter-spacing: 0.06em;
+  }
+  .tag-green  { background: var(--green-dim);  color: var(--green); }
+  .tag-yellow { background: var(--yellow-dim); color: var(--yellow); }
+  .tag-red    { background: var(--red-dim);    color: var(--red); }
+  .tag-blue   { background: var(--teal-dim);   color: var(--teal); }
+  .tag-steel  { background: var(--steel-dim);  color: var(--text-mid); }
+  .panel-body { padding: 16px; }
+
+  /* ── SITE MAP SVG ── */
+  .map-container {
+    width: 100%; aspect-ratio: 4/3;
+    background: #0a0c10;
+    border-radius: 2px;
+    position: relative; overflow: hidden;
+  }
+  .map-container svg { width: 100%; height: 100%; }
+
+  /* ── CHART AREA ── */
+  .chart-wrap { position: relative; height: 160px; }
+  canvas.chart { width: 100% !important; height: 100% !important; }
+
+  /* ── SOURCE TABLE ── */
+  .source-table { width: 100%; border-collapse: collapse; }
+  .source-table th {
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-lo);
+    padding: 0 8px 8px 0; text-align: left; border-bottom: 1px solid var(--border);
+  }
+  .source-table td {
+    padding: 7px 8px 7px 0; font-size: 11px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-mid); vertical-align: middle;
+  }
+  .source-table tr:last-child td { border-bottom: none; }
+  .src-name { font-weight: 600; color: var(--text-hi); }
+  .src-db { font-family: var(--mono); font-weight: 700; font-size: 13px; }
+  .contribution-bar {
+    background: var(--bg-base);
+    border-radius: 2px;
+    height: 6px; width: 100%; overflow: hidden;
+  }
+  .contribution-fill {
+    height: 100%; border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+  .src-mitigation { font-size: 10px; color: var(--text-lo); }
+
+  /* ── LOG TABLE ── */
+  .log-table { width: 100%; border-collapse: collapse; }
+  .log-table th {
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-lo);
+    padding: 0 10px 8px 0; text-align: left; border-bottom: 1px solid var(--border);
+  }
+  .log-table td {
+    padding: 6px 10px 6px 0; font-size: 11px;
+    border-bottom: 1px solid var(--border); color: var(--text-mid);
+  }
+  .log-table tr:last-child td { border-bottom: none; }
+  .log-ts { font-family: var(--mono); font-size: 10px; color: var(--text-lo); white-space: nowrap; }
+  .log-mp { font-family: var(--mono); font-weight: 700; font-size: 11px; }
+  .log-reading { font-family: var(--mono); font-weight: 700; }
+  .status-pill {
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px; white-space: nowrap;
+  }
+  .pill-ok   { background: var(--green-dim);  color: var(--green); }
+  .pill-warn { background: var(--yellow-dim); color: var(--yellow); }
+  .pill-over { background: var(--red-dim);    color: var(--red); }
+  .log-note  { font-size: 10px; color: var(--text-lo); }
+
+  /* ── DETAIL PANEL ── */
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .detail-item { display: flex; flex-direction: column; gap: 3px; }
+  .detail-label { font-family: var(--mono); font-size: 9px; color: var(--text-lo); text-transform: uppercase; letter-spacing: 0.1em; }
+  .detail-val { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--text-hi); }
+  .detail-val.ok   { color: var(--green); }
+  .detail-val.warn { color: var(--yellow); }
+  .detail-val.over { color: var(--red); }
+
+  .gauge-bar {
+    width: 100%; height: 8px; background: var(--bg-base);
+    border-radius: 4px; overflow: hidden; margin-top: 6px;
+  }
+  .gauge-fill {
+    height: 100%; border-radius: 4px;
+    transition: width 0.5s ease;
+    background: linear-gradient(90deg, var(--green) 0%, var(--yellow) 65%, var(--red) 100%);
+  }
+  .gauge-labels {
+    display: flex; justify-content: space-between;
+    margin-top: 3px;
+  }
+  .gauge-labels span { font-family: var(--mono); font-size: 9px; color: var(--text-lo); }
+
+  .divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+  /* ── ORDINANCE PANEL ── */
+  .ordinance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ord-card {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+  }
+  .ord-zone { font-family: var(--mono); font-size: 9px; color: var(--steel); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+  .ord-limits { display: flex; gap: 12px; }
+  .ord-time { display: flex; flex-direction: column; }
+  .ord-time-label { font-size: 10px; color: var(--text-lo); }
+  .ord-time-val { font-family: var(--mono); font-size: 20px; font-weight: 700; line-height: 1; }
+  .ord-time-val.day   { color: var(--yellow); }
+  .ord-time-val.night { color: var(--teal); }
+  .ord-time-unit { font-family: var(--mono); font-size: 10px; color: var(--text-lo); }
+  .ord-note { font-size: 10px; color: var(--text-lo); margin-top: 8px; line-height: 1.4; }
+
+  .footer {
+    grid-column: span 2;
+    padding: 16px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-note { font-size: 10px; color: var(--text-lo); line-height: 1.5; }
+  .footer-fos { font-family: var(--mono); font-size: 10px; color: var(--orange); font-weight: 700; }
+
+  /* ── EQUIPMENT SECTION ── */
+  .equip-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .equip-card {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+  }
+  .equip-card-header {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 10px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .equip-icon {
+    width: 28px; height: 28px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .equip-card-title { font-size: 11px; font-weight: 700; color: var(--text-hi); line-height: 1.3; }
+  .equip-card-cat { font-family: var(--mono); font-size: 9px; color: var(--text-lo); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .equip-items { display: flex; flex-direction: column; gap: 6px; }
+  .equip-item { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .equip-item-name { font-size: 10px; color: var(--text-mid); line-height: 1.4; }
+  .equip-item-cost { font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--teal); white-space: nowrap; }
+  .equip-card-total {
+    margin-top: 10px; padding-top: 8px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between;
+  }
+  .equip-total-label { font-family: var(--mono); font-size: 9px; color: var(--text-lo); text-transform: uppercase; letter-spacing: 0.08em; }
+  .equip-total-val { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--orange); }
+
+  .equip-summary-bar {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 24px;
+  }
+  .equip-summary-items { display: flex; gap: 32px; }
+  .equip-sum-block { display: flex; flex-direction: column; }
+  .equip-sum-label { font-family: var(--mono); font-size: 9px; color: var(--text-lo); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
+  .equip-sum-val { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--text-hi); line-height: 1; }
+  .equip-sum-val.orange { color: var(--orange); }
+  .equip-sum-note { font-size: 10px; color: var(--text-lo); max-width: 420px; line-height: 1.5; }
+
+  /* ── LOG INPUT ── */
+  .log-input-row {
+    display: grid;
+    grid-template-columns: 140px 120px 120px 1fr auto;
+    gap: 8px; align-items: end; margin-bottom: 14px;
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-family: var(--mono); font-size: 9px; color: var(--text-lo); text-transform: uppercase; letter-spacing: 0.1em; }
+  .field select, .field input {
+    background: var(--bg-base); border: 1px solid var(--border);
+    color: var(--text-hi); font-family: var(--mono); font-size: 11px;
+    padding: 6px 8px; border-radius: var(--radius); outline: none;
+    transition: border-color 0.15s;
+  }
+  .field select:focus, .field input:focus { border-color: var(--teal); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-base); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .main { grid-template-columns: 1fr; }
+    .panel.span2, .footer { grid-column: span 1; }
+    .ordinance-grid { grid-template-columns: 1fr; }
+    .log-input-row { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-left">
+    <div class="logo-mark">FOS216</div>
+    <div>
+      <div class="header-title">Fence Line Noise Monitoring</div>
+      <div class="header-sub">Morabito Data Campus · 3560 E. 55th St, Slavic Village, Cleveland OH</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-badge"><div class="live-dot"></div>MONITORING ACTIVE</div>
+    <div class="clock" id="clock">—</div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Project</div>
+      <div class="site-info-block">
+        <div class="info-row"><span class="info-key">Site</span><span class="info-val">Morabito Data Campus</span></div>
+        <div class="info-row"><span class="info-key">Address</span><span class="info-val">3560 E. 55th St</span></div>
+        <div class="info-row"><span class="info-key">District</span><span class="info-val">Slavic Village</span></div>
+        <div class="info-row"><span class="info-key">Developer</span><span class="info-val">Lakeland Equity Group</span></div>
+        <div class="info-row"><span class="info-key">Acoustic Budget</span><span class="info-val accent">$13.8M</span></div>
+        <div class="info-row"><span class="info-key">Primary Gen.</span><span class="info-val">GE Vernova 7HA.01</span></div>
+        <div class="info-row"><span class="info-key">Ordinance</span><span class="info-val teal">Cleveland §551</span></div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">§551 Limits — Adjacent Zoning</div>
+      <table class="threshold-table">
+        <thead>
+          <tr>
+            <th>Zone</th><th>Day</th><th>Night</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td-zone">Residential (A/B)</td>
+            <td class="td-day">60 dB</td>
+            <td class="td-night">50 dB</td>
+          </tr>
+          <tr>
+            <td class="td-zone">Multi-Family (C)</td>
+            <td class="td-day">60 dB</td>
+            <td class="td-night">55 dB</td>
+          </tr>
+          <tr>
+            <td class="td-zone">Commercial (E)</td>
+            <td class="td-day">65 dB</td>
+            <td class="td-night">60 dB</td>
+          </tr>
+          <tr>
+            <td class="td-zone">Industrial (F)</td>
+            <td class="td-day">75 dB</td>
+            <td class="td-night">70 dB</td>
+          </tr>
+          <tr>
+            <td class="td-zone">Impulsive +5 dB</td>
+            <td class="td-day">penalty</td>
+            <td class="td-night">penalty</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="font-size:10px;color:var(--text-lo);margin-top:8px;line-height:1.5">
+        Day = 7:00 AM – 10:00 PM<br>
+        Night = 10:00 PM – 7:00 AM<br>
+        Measured at or beyond property line per §551.02
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Monitor Points</div>
+      <div class="mp-list" id="mpList"></div>
+    </div>
+
+  </aside>
+
+  <!-- TOP KPI BAR -->
+  <div style="grid-column:2;">
+
+    <div class="topbar">
+      <div class="topbar-kpis">
+        <div class="kpi-block">
+          <div class="kpi-label">Worst Reading</div>
+          <div class="kpi-val" id="kpi-worst">—</div>
+          <div class="kpi-sub">dB(A) @ <span id="kpi-worst-mp">—</span></div>
+        </div>
+        <div class="kpi-block">
+          <div class="kpi-label">Points in Limit</div>
+          <div class="kpi-val ok" id="kpi-ok">—</div>
+          <div class="kpi-sub">of <span id="kpi-total">—</span> active points</div>
+        </div>
+        <div class="kpi-block">
+          <div class="kpi-label">Exceedances / 24h</div>
+          <div class="kpi-val" id="kpi-exc">—</div>
+          <div class="kpi-sub">last rolling 24 hours</div>
+        </div>
+        <div class="kpi-block">
+          <div class="kpi-label">Time Mode</div>
+          <div class="kpi-val" id="kpi-mode">—</div>
+          <div class="kpi-sub">limits active</div>
+        </div>
+      </div>
+      <div class="topbar-controls">
+        <div class="time-mode">
+          <button class="tm-btn active" id="btn-day" onclick="setTimeMode('day')">Day</button>
+          <button class="tm-btn" id="btn-night" onclick="setTimeMode('night')">Night</button>
+        </div>
+        <button class="btn primary" onclick="logReading()">+ Log Reading</button>
+        <button class="btn" onclick="exportLog()">Export CSV</button>
+      </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="main">
+
+      <!-- SITE MAP -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Site Plan — Monitor Point Locations</span>
+          <span class="panel-tag tag-blue">3560 E. 55TH ST</span>
+        </div>
+        <div class="panel-body" style="padding:12px;">
+          <div class="map-container">
+            <svg id="siteMap" viewBox="0 0 520 390" xmlns="http://www.w3.org/2000/svg">
+              <!-- Background -->
+              <rect width="520" height="390" fill="#080a0d"/>
+
+              <!-- Street labels -->
+              <text x="10" y="22" font-family="JetBrains Mono,monospace" font-size="9" fill="#3a4060">E. 55TH ST (N→S)</text>
+              <text x="200" y="383" font-family="JetBrains Mono,monospace" font-size="9" fill="#3a4060">INDUSTRIAL AVE</text>
+
+              <!-- Road E. 55th (left edge) -->
+              <rect x="0" y="0" width="40" height="390" fill="#0f1218"/>
+              <line x1="40" y1="0" x2="40" y2="390" stroke="#2a2f42" stroke-width="1"/>
+
+              <!-- Road bottom -->
+              <rect x="0" y="360" width="520" height="30" fill="#0f1218"/>
+              <line x1="0" y1="360" x2="520" y2="360" stroke="#2a2f42" stroke-width="1"/>
+
+              <!-- Site perimeter -->
+              <rect x="50" y="20" width="410" height="330" fill="#111420" stroke="#3a4060" stroke-width="1.5" stroke-dasharray="6 3"/>
+
+              <!-- Fence line label -->
+              <text x="56" y="35" font-family="JetBrains Mono,monospace" font-size="8" fill="#3a4060">— PROPERTY / FENCE LINE —</text>
+
+              <!-- Main data hall block -->
+              <rect x="80" y="50" width="250" height="200" fill="#1a1e2a" stroke="#2a2f42" stroke-width="1"/>
+              <text x="165" y="148" font-family="JetBrains Mono,monospace" font-size="10" fill="#5a617a" text-anchor="middle">DATA HALL</text>
+              <text x="165" y="162" font-family="JetBrains Mono,monospace" font-size="8" fill="#3a4060" text-anchor="middle">SHELL &amp; CORE</text>
+
+              <!-- GE Vernova turbine block -->
+              <rect x="345" y="50" width="100" height="80" fill="#141720" stroke="#f06a00" stroke-width="1"/>
+              <text x="395" y="87" font-family="JetBrains Mono,monospace" font-size="8" fill="#b04a00" text-anchor="middle">GE VERNOVA</text>
+              <text x="395" y="99" font-family="JetBrains Mono,monospace" font-size="7" fill="#7a3400" text-anchor="middle">7HA.01 GT</text>
+
+              <!-- HRSG block -->
+              <rect x="345" y="140" width="100" height="60" fill="#141720" stroke="#f06a00" stroke-width="1" stroke-dasharray="4 2"/>
+              <text x="395" y="175" font-family="JetBrains Mono,monospace" font-size="8" fill="#7a3400" text-anchor="middle">HRSG</text>
+
+              <!-- Cooling tower block -->
+              <rect x="80" y="260" width="120" height="70" fill="#141720" stroke="#00b4c8" stroke-width="1"/>
+              <text x="140" y="298" font-family="JetBrains Mono,monospace" font-size="8" fill="#007f8c" text-anchor="middle">COOLING</text>
+              <text x="140" y="310" font-family="JetBrains Mono,monospace" font-size="8" fill="#007f8c" text-anchor="middle">TOWERS</text>
+
+              <!-- Mainspring LGen yard -->
+              <rect x="215" y="260" width="110" height="70" fill="#141720" stroke="#6e7a99" stroke-width="1"/>
+              <text x="270" y="298" font-family="JetBrains Mono,monospace" font-size="8" fill="#4e5a79" text-anchor="middle">LGEN YARD</text>
+              <text x="270" y="310" font-family="JetBrains Mono,monospace" font-size="7" fill="#3e4460" text-anchor="middle">MAINSPRING</text>
+
+              <!-- Electrical switchgear -->
+              <rect x="340" y="210" width="110" height="60" fill="#141720" stroke="#6e7a99" stroke-width="1" stroke-dasharray="3 2"/>
+              <text x="395" y="243" font-family="JetBrains Mono,monospace" font-size="8" fill="#4e5a79" text-anchor="middle">SWITCHGEAR</text>
+
+              <!-- Noise barrier symbols (dashed arcs near sources) -->
+              <path d="M 345,55 Q 330,90 345,125" stroke="#f06a00" stroke-width="1.5" stroke-dasharray="3 2" fill="none" opacity="0.4"/>
+              <path d="M 75,260 Q 60,290 75,330" stroke="#00b4c8" stroke-width="1.5" stroke-dasharray="3 2" fill="none" opacity="0.4"/>
+
+              <!-- Monitor Points -->
+              <!-- MP-N1 (North fence, residential side) -->
+              <g id="mp-svg-N1" style="cursor:pointer" onclick="selectMP('N1')">
+                <circle cx="200" cy="28" r="9" fill="#00b4c8" fill-opacity="0.2" stroke="#00b4c8" stroke-width="1.5"/>
+                <text x="200" y="32" font-family="JetBrains Mono,monospace" font-size="8" font-weight="700" fill="#00b4c8" text-anchor="middle">N1</text>
+              </g>
+              <!-- MP-E1 (East / GT side) -->
+              <g id="mp-svg-E1" style="cursor:pointer" onclick="selectMP('E1')">
+                <circle cx="463" cy="90" r="9" fill="#f06a00" fill-opacity="0.3" stroke="#f06a00" stroke-width="1.5"/>
+                <text x="463" y="94" font-family="JetBrains Mono,monospace" font-size="8" font-weight="700" fill="#f06a00" text-anchor="middle">E1</text>
+              </g>
+              <!-- MP-E2 (East mid) -->
+              <g id="mp-svg-E2" style="cursor:pointer" onclick="selectMP('E2')">
+                <circle cx="463" cy="200" r="9" fill="#00b4c8" fill-opacity="0.2" stroke="#00b4c8" stroke-width="1.5"/>
+                <text x="463" y="204" font-family="JetBrains Mono,monospace" font-size="8" font-weight="700" fill="#00b4c8" text-anchor="middle">E2</text>
+              </g>
+              <!-- MP-S1 (South / residential boundary) -->
+              <g id="mp-svg-S1" style="cursor:pointer" onclick="selectMP('S1')">
+                <circle cx="150" cy="354" r="9" fill="#e03e3e" fill-opacity="0.3" stroke="#e03e3e" stroke-width="2"/>
+                <text x="150" y="358" font-family="JetBrains Mono,monospace" font-size="8" font-weight="700" fill="#e03e3e" text-anchor="middle">S1</text>
+              </g>
+              <!-- MP-S2 (South / industrial boundary) -->
+              <g id="mp-svg-S2" style="cursor:pointer" onclick="selectMP('S2')">
+                <circle cx="330" cy="354" r="9" fill="#00b4c8" fill-opacity="0.2" stroke="#00b4c8" stroke-width="1.5"/>
+                <text x="330" y="358" font-family="JetBrains Mono,monospace" font-size="8" font-weight="700" fill="#00b4c8" text-anchor="middle">S2</text>
+              </g>
+              <!-- MP-W1 (West / 55th St residential) -->
+              <g id="mp-svg-W1" style="cursor:pointer" onclick="selectMP('W1')">
+                <circle cx="57" cy="180" r="9" fill="#f5c518" fill-opacity="0.25" stroke="#f5c518" stroke-width="1.5"/>
+                <text x="57" y="184" font-family="JetBrains Mono,monospace" font-size="8" font-weight="700" fill="#f5c518" text-anchor="middle">W1</text>
+              </g>
+
+              <!-- Compass -->
+              <g transform="translate(490,30)">
+                <text x="0" y="-8" font-family="JetBrains Mono,monospace" font-size="8" fill="#3a4060" text-anchor="middle">N</text>
+                <line x1="0" y1="-6" x2="0" y2="6" stroke="#3a4060" stroke-width="1"/>
+                <line x1="-6" y1="0" x2="6" y2="0" stroke="#3a4060" stroke-width="1" stroke-dasharray="2 2"/>
+                <circle cx="0" cy="0" r="8" fill="none" stroke="#2a2f42" stroke-width="1"/>
+              </g>
+
+              <!-- Legend -->
+              <g transform="translate(80,340)">
+                <rect x="0" y="0" width="8" height="8" fill="#f06a00" opacity="0.5" rx="1"/>
+                <text x="12" y="8" font-family="JetBrains Mono,monospace" font-size="7" fill="#5a617a">Thermal/GT</text>
+                <rect x="70" y="0" width="8" height="8" fill="#00b4c8" opacity="0.4" rx="1"/>
+                <text x="82" y="8" font-family="JetBrains Mono,monospace" font-size="7" fill="#5a617a">Cooling</text>
+                <circle cx="140" cy="4" r="4" fill="none" stroke="#2a2f42" stroke-width="1" stroke-dasharray="2 1"/>
+                <text x="148" y="8" font-family="JetBrains Mono,monospace" font-size="7" fill="#5a617a">Fence line</text>
+              </g>
+            </svg>
+          </div>
+          <div style="margin-top:8px;font-size:10px;color:var(--text-lo)">
+            Click a monitor point on the map or in the sidebar to view detail. Red = current exceedance. Yellow = within 3 dB of limit.
+          </div>
+        </div>
+      </div>
+
+      <!-- DETAIL / GAUGE PANEL -->
+      <div class="panel" id="detailPanel">
+        <div class="panel-header">
+          <span class="panel-title" id="detail-title">Select Monitor Point</span>
+          <span class="panel-tag tag-steel" id="detail-zone">—</span>
+        </div>
+        <div class="panel-body">
+          <div class="detail-grid" id="detail-grid">
+            <div class="detail-item">
+              <div class="detail-label">Current Reading</div>
+              <div class="detail-val" id="d-reading">—</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Limit (Active)</div>
+              <div class="detail-val" id="d-limit">—</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Headroom</div>
+              <div class="detail-val" id="d-headroom">—</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Trend (1h)</div>
+              <div class="detail-val" id="d-trend">—</div>
+            </div>
+          </div>
+          <div class="gauge-bar" style="margin-top:14px">
+            <div class="gauge-fill" id="gauge-fill" style="width:0%"></div>
+          </div>
+          <div class="gauge-labels">
+            <span>0 dB</span>
+            <span id="gauge-limit-label">Limit</span>
+            <span>80 dB</span>
+          </div>
+          <div class="divider"></div>
+          <div id="detail-desc" style="font-size:11px;color:var(--text-mid);line-height:1.6">
+            Select a monitor point from the site map or sidebar list to view detail, trend, and mitigation notes.
+          </div>
+        </div>
+      </div>
+
+      <!-- NOISE SOURCE BREAKDOWN -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Noise Source Breakdown — Campus</span>
+          <span class="panel-tag tag-steel">MODELED + FIELD</span>
+        </div>
+        <div class="panel-body">
+          <table class="source-table">
+            <thead>
+              <tr>
+                <th>Source</th><th>Lw (dB)</th><th>Fence Contribution</th><th>Mitigation</th>
+              </tr>
+            </thead>
+            <tbody id="sourceTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- LOG INPUT + TABLE -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Add Manual Reading</span>
+          <span class="panel-tag tag-blue">FIELD ENTRY</span>
+        </div>
+        <div class="panel-body">
+          <div class="log-input-row">
+            <div class="field">
+              <label>Monitor Point</label>
+              <select id="inp-mp">
+                <option value="N1">N1 — North Fence</option>
+                <option value="E1">E1 — NE / GT Side</option>
+                <option value="E2">E2 — SE / HRSG Side</option>
+                <option value="S1">S1 — South Res.</option>
+                <option value="S2">S2 — South Ind.</option>
+                <option value="W1">W1 — West / E. 55th</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Reading dB(A)</label>
+              <input type="number" id="inp-db" placeholder="e.g. 58.4" min="20" max="120" step="0.1">
+            </div>
+            <div class="field">
+              <label>Instrument</label>
+              <select id="inp-inst">
+                <option>SLM-1 Brüel &amp; Kjær</option>
+                <option>SLM-2 Larson Davis</option>
+                <option>SLM-3 Pulsar Nova</option>
+                <option>Continuous Logger</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Notes</label>
+              <input type="text" id="inp-note" placeholder="Conditions, anomalies…">
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn primary" onclick="submitReading()" style="height:30px">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOG TABLE -->
+      <div class="panel span2">
+        <div class="panel-header">
+          <span class="panel-title">Reading Log</span>
+          <span class="panel-tag tag-steel" id="log-count">0 entries</span>
+        </div>
+        <div class="panel-body" style="padding:0 16px 16px">
+          <table class="log-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Point</th>
+                <th>Location</th>
+                <th>Reading</th>
+                <th>Limit</th>
+                <th>Δ Limit</th>
+                <th>Status</th>
+                <th>Instrument</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="logTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- §551 ORDINANCE REFERENCE -->
+      <div class="panel span2">
+        <div class="panel-header">
+          <span class="panel-title">Cleveland Codified Ordinance §551 — Noise Control Reference</span>
+          <span class="panel-tag tag-blue">MORABITO APPLICABLE LIMITS</span>
+        </div>
+        <div class="panel-body">
+          <div class="ordinance-grid">
+            <div class="ord-card">
+              <div class="ord-zone">Residential A/B — Adjacent (W1, portions S1)</div>
+              <div class="ord-limits">
+                <div class="ord-time">
+                  <div class="ord-time-label">Day (7a–10p)</div>
+                  <div class="ord-time-val day">60</div>
+                  <div class="ord-time-unit">dB(A)</div>
+                </div>
+                <div class="ord-time">
+                  <div class="ord-time-label">Night (10p–7a)</div>
+                  <div class="ord-time-val night">50</div>
+                  <div class="ord-time-unit">dB(A)</div>
+                </div>
+              </div>
+              <div class="ord-note">E. 55th St frontage has existing residential use. Most critical constraint for Morabito. Acoustic barrier design targets 14 dB insertion loss on turbine exhaust path.</div>
+            </div>
+            <div class="ord-card">
+              <div class="ord-zone">Multi-Family C — North Fence (N1)</div>
+              <div class="ord-limits">
+                <div class="ord-time">
+                  <div class="ord-time-label">Day (7a–10p)</div>
+                  <div class="ord-time-val day">60</div>
+                  <div class="ord-time-unit">dB(A)</div>
+                </div>
+                <div class="ord-time">
+                  <div class="ord-time-label">Night (10p–7a)</div>
+                  <div class="ord-time-val night">55</div>
+                  <div class="ord-time-unit">dB(A)</div>
+                </div>
+              </div>
+              <div class="ord-note">North boundary adjacent to multi-family residential. HRSG stack is primary noise pathway; HRSG silencer rated to meet limit with ≥5 dB headroom.</div>
+            </div>
+            <div class="ord-card">
+              <div class="ord-zone">Industrial F — East/SE Fence (E1, E2, S2)</div>
+              <div class="ord-limits">
+                <div class="ord-time">
+                  <div class="ord-time-label">Day (7a–10p)</div>
+                  <div class="ord-time-val day">75</div>
+                  <div class="ord-time-unit">dB(A)</div>
+                </div>
+                <div class="ord-time">
+                  <div class="ord-time-label">Night (10p–7a)</div>
+                  <div class="ord-time-val night">70</div>
+                  <div class="ord-time-unit">dB(A)</div>
+                </div>
+              </div>
+              <div class="ord-note">East and SE boundary adjacent to Industrial Valley. GT exhaust and HV switchgear are dominant sources at E1/E2. GE 7HA.01 exhaust silencer targets 80 dB(A) at 1 m.</div>
+            </div>
+            <div class="ord-card">
+              <div class="ord-zone">§551 — Impulsive / Tonal Provisions</div>
+              <div class="ord-limits">
+                <div class="ord-time">
+                  <div class="ord-time-label">Tonal Penalty</div>
+                  <div class="ord-time-val" style="color:var(--red)">+5</div>
+                  <div class="ord-time-unit">dB(A)</div>
+                </div>
+                <div class="ord-time">
+                  <div class="ord-time-label">Impulsive Pen.</div>
+                  <div class="ord-time-val" style="color:var(--red)">+5</div>
+                  <div class="ord-time-unit">dB(A)</div>
+                </div>
+              </div>
+              <div class="ord-note">LGen linear reciprocating motion is a tonal concern — Mainspring units require acoustic enclosure with 10 dB(A) attenuation. Compressor blade-pass frequency for GT must be below audible tonal threshold at fence line.</div>
+            </div>
+          </div>
+          <div style="margin-top:14px;padding:10px;background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius);font-size:10px;color:var(--text-lo);line-height:1.6">
+            <strong style="color:var(--text-mid)">§551.02 Measurement Protocol:</strong> Sound level measurements shall be taken with a Type 1 or Type 2 sound level meter meeting ANSI S1.4 standards, A-weighted slow response. Measurements taken at or beyond the property line, 4–5 ft above grade, minimum 3 ft from reflective surfaces. Average of three 1-minute Leq readings constitutes a valid sample. Meteorological conditions: wind &lt;5 m/s, no precipitation, &gt;10 dB background ambient confirmation required.
+            <br><br>
+            <strong style="color:var(--text-mid)">Morabito Class 4 Acoustic Package:</strong> ~$13.8M covering (1) GT exhaust silencer stack, (2) HRSG duct silencers, (3) cooling tower fill and fan acoustic enclosures, (4) LGen building enclosures, (5) HV transformer enclosure on E. 55th side, (6) perimeter concrete noise barrier (north &amp; west), (7) continuous fence-line monitoring stations (×6). Targeting full §551 compliance with ≥5 dB headroom on all residential boundaries.
+          </div>
+        </div>
+      </div>
+
+      <!-- EQUIPMENT LIST -->
+      <div class="panel span2">
+        <div class="panel-header">
+          <span class="panel-title">Supporting Equipment — Fence Line Monitoring Program</span>
+          <span class="panel-tag tag-blue">PROCUREMENT REFERENCE</span>
+        </div>
+        <div class="panel-body">
+          <div class="equip-grid">
+
+            <div class="equip-card">
+              <div class="equip-card-header">
+                <div class="equip-icon" style="background:rgba(0,180,200,0.12);color:var(--teal)">📡</div>
+                <div>
+                  <div class="equip-card-title">Permanent Continuous SLM Stations</div>
+                  <div class="equip-card-cat">Category 1 — Fixed Monitoring</div>
+                </div>
+              </div>
+              <div class="equip-items">
+                <div class="equip-item">
+                  <span class="equip-item-name">Brüel &amp; Kjær Type 2250 / 2270 Class 1 outdoor monitor ×6 (IP55, GPS, cellular/fiber backhaul, 1/3-oct spectra)</span>
+                  <span class="equip-item-cost">$60–85K</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">N1 &amp; S1 (residential boundaries) — Class 1 IEC 61672 instruments; E1/E2 (industrial) — Class 2 acceptable</span>
+                  <span class="equip-item-cost">incl.</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">Leq, Lmax, L90, 1/3-octave continuous logging, 90-day local storage</span>
+                  <span class="equip-item-cost">incl.</span>
+                </div>
+              </div>
+              <div class="equip-card-total">
+                <span class="equip-total-label">Subtotal</span>
+                <span class="equip-total-val">$60,000 – $85,000</span>
+              </div>
+            </div>
+
+            <div class="equip-card">
+              <div class="equip-card-header">
+                <div class="equip-icon" style="background:rgba(240,106,0,0.12);color:var(--orange)">🎙️</div>
+                <div>
+                  <div class="equip-card-title">Portable Type 1 Field SLMs</div>
+                  <div class="equip-card-cat">Category 2 — Field Verification</div>
+                </div>
+              </div>
+              <div class="equip-items">
+                <div class="equip-item">
+                  <span class="equip-item-name">Brüel &amp; Kjær 2250-L — ANSI S1.4 Type 1, A/C/Z weighted, 1/3-oct, data logging ×1</span>
+                  <span class="equip-item-cost">$8–14K</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">Larson Davis LxT — Type 1, 1/3-octave real-time analysis ×1</span>
+                  <span class="equip-item-cost">$8–14K</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">Pulsar Nova — Type 1, Bluetooth data transfer, compact form factor ×1</span>
+                  <span class="equip-item-cost">$8–14K</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">Assignment: 1 site office resident, 2 field/acoustic engineer walkdowns &amp; exceedance investigation</span>
+                  <span class="equip-item-cost">—</span>
+                </div>
+              </div>
+              <div class="equip-card-total">
+                <span class="equip-total-label">Subtotal</span>
+                <span class="equip-total-val">$24,000 – $42,000</span>
+              </div>
+            </div>
+
+            <div class="equip-card">
+              <div class="equip-card-header">
+                <div class="equip-icon" style="background:rgba(245,197,24,0.12);color:var(--yellow)">🌬️</div>
+                <div>
+                  <div class="equip-card-title">Meteorological Station</div>
+                  <div class="equip-card-cat">Category 3 — §551.02 Condition Logging</div>
+                </div>
+              </div>
+              <div class="equip-items">
+                <div class="equip-item">
+                  <span class="equip-item-name">2D ultrasonic anemometer at 10 m AGL — wind speed/direction (×2: E parcel + W1/S1 corner)</span>
+                  <span class="equip-item-cost">incl.</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">Vaisala HMP series — temperature &amp; relative humidity (atmospheric absorption correction)</span>
+                  <span class="equip-item-cost">incl.</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">Tipping-bucket rain gauge — auto-voids readings during precipitation per §551.02</span>
+                  <span class="equip-item-cost">incl.</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">Barometric pressure sensor — sound speed correction over propagation paths</span>
+                  <span class="equip-item-cost">incl.</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">Campbell Scientific CR1000X datalogger — integrates with SLM for auto-annotated records</span>
+                  <span class="equip-item-cost">$15–22K</span>
+                </div>
+              </div>
+              <div class="equip-card-total">
+                <span class="equip-total-label">Subtotal</span>
+                <span class="equip-total-val">$15,000 – $22,000</span>
+              </div>
+            </div>
+
+            <div class="equip-card">
+              <div class="equip-card-header">
+                <div class="equip-icon" style="background:rgba(224,62,62,0.12);color:var(--red)">📳</div>
+                <div>
+                  <div class="equip-card-title">Vibration / Structure-Borne Monitoring</div>
+                  <div class="equip-card-cat">Category 4 — LGen &amp; GT Foundation</div>
+                </div>
+              </div>
+              <div class="equip-items">
+                <div class="equip-item">
+                  <span class="equip-item-name">PCB Piezotronics 393B04 triaxial accelerometers — LGen foundations &amp; building slab, 10–250 Hz (×4 per LGen bldg) for §551 tonal penalty assessment</span>
+                  <span class="equip-item-cost">incl.</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">Geophone string — GT 7HA.01 foundation ground vibration at W1 &amp; N1 property line (ISO 10816-3 complementary)</span>
+                  <span class="equip-item-cost">incl.</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">Accelerometers on first 3 HRSG/LP Economizer pipe supports — isolation hanger performance verification post-commissioning</span>
+                  <span class="equip-item-cost">incl.</span>
+                </div>
+              </div>
+              <div class="equip-card-total">
+                <span class="equip-total-label">Subtotal</span>
+                <span class="equip-total-val">$40,000 – $65,000</span>
+              </div>
+            </div>
+
+            <div class="equip-card">
+              <div class="equip-card-header">
+                <div class="equip-icon" style="background:rgba(0,180,200,0.10);color:var(--teal)">🖧</div>
+                <div>
+                  <div class="equip-card-title">Data Infrastructure &amp; Integration</div>
+                  <div class="equip-card-cat">Category 5 — Backhaul, RTU, DCS Link</div>
+                </div>
+              </div>
+              <div class="equip-items">
+                <div class="equip-item">
+                  <span class="equip-item-name">Field RTU at each SLM station — 4G LTE backup + primary fiber, 90-day local buffer</span>
+                  <span class="equip-item-cost">incl.</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">Noise monitoring software — NorSonic Noise Sentinel / 01dB WINGS / Cirrus Optimus Green Cloud (§551 &amp; Title V reporting format, rolling 24h Leq, auto-flag exceedances)</span>
+                  <span class="equip-item-cost">$18–28K yr1</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">DCS integration — 7HA.01 load state, CT fan speed correlated with SLM readings in real time; auto-alert on peak load at W1/E1</span>
+                  <span class="equip-item-cost">incl.</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">Exceedance notification — SMS/email to acoustic engineer &amp; facility manager within 5 min of residential boundary exceedance</span>
+                  <span class="equip-item-cost">incl.</span>
+                </div>
+              </div>
+              <div class="equip-card-total">
+                <span class="equip-total-label">Subtotal (hardware + yr 1 SW)</span>
+                <span class="equip-total-val">$43,000 – $68,000</span>
+              </div>
+            </div>
+
+            <div class="equip-card">
+              <div class="equip-card-header">
+                <div class="equip-icon" style="background:rgba(110,122,153,0.15);color:var(--steel)">🔧</div>
+                <div>
+                  <div class="equip-card-title">Calibration &amp; Maintenance</div>
+                  <div class="equip-card-cat">Category 6 — ANSI S1.4 / Ohio EPA Compliance</div>
+                </div>
+              </div>
+              <div class="equip-items">
+                <div class="equip-item">
+                  <span class="equip-item-name">B&amp;K 4231 acoustic calibrator (94 dB / 1 kHz) — 1 per field kit ×3</span>
+                  <span class="equip-item-cost">incl.</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">B&amp;K 4228 pistonphone (250 Hz, 124 dB) — reference standard for enforcement-context measurements</span>
+                  <span class="equip-item-cost">incl.</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">Annual A2LA-accredited lab certification — Intertek / NTS / B&amp;K calibration service, NIST-traceable</span>
+                  <span class="equip-item-cost">~$3K/yr</span>
+                </div>
+                <div class="equip-item">
+                  <span class="equip-item-name">90 mm foam windscreens; ground board baffles for W1 (road noise isolation); quarterly desiccant replacement</span>
+                  <span class="equip-item-cost">incl.</span>
+                </div>
+              </div>
+              <div class="equip-card-total">
+                <span class="equip-total-label">Subtotal</span>
+                <span class="equip-total-val">$8,000 – $14,000</span>
+              </div>
+            </div>
+
+          </div><!-- /equip-grid -->
+
+          <div class="equip-summary-bar">
+            <div class="equip-summary-items">
+              <div class="equip-sum-block">
+                <div class="equip-sum-label">Program Total (installed)</div>
+                <div class="equip-sum-val orange">$190K – $296K</div>
+              </div>
+              <div class="equip-sum-block">
+                <div class="equip-sum-label">Annual O&amp;M (est.)</div>
+                <div class="equip-sum-val">$18K – $28K</div>
+              </div>
+              <div class="equip-sum-block">
+                <div class="equip-sum-label">As % of Acoustic Package</div>
+                <div class="equip-sum-val">1.4 – 2.1%</div>
+              </div>
+              <div class="equip-sum-block">
+                <div class="equip-sum-label">Monitor Points</div>
+                <div class="equip-sum-val">6</div>
+              </div>
+            </div>
+            <div class="equip-sum-note">
+              Monitoring program is separate from and in addition to the $13.8M acoustic mitigation package. This equipment verifies that mitigation is performing as designed. Separate from plant-standard ISO 10816-3 vibration instrumentation on the GE Vernova 7HA.01 GT control system. Software subscription renews annually; hardware lifecycle ~10 years.
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="footer">
+        <div class="footer-note">
+          Fence Line Noise Monitoring · Cleveland Codified Ordinance §551 · Morabito Data Campus, Slavic Village Cleveland OH<br>
+          All readings dB(A) Leq slow-response. Limits apply at or beyond property line per §551.02. Day = 07:00–22:00 / Night = 22:00–07:00.
+        </div>
+        <div class="footer-fos">THE FIXOURSTREETS216 PROJECT</div>
+      </div>
+
+    </div><!-- /main -->
+  </div><!-- /right column -->
+</div><!-- /layout -->
+
+<script>
+// ── DATA MODEL ──────────────────────────────────────────────────────────────
+
+const MONITOR_POINTS = [
+  {
+    id: 'N1', label: 'North Fence', zone: 'Multi-Family C',
+    dayLimit: 60, nightLimit: 55,
+    latestDb: 54.2, trend: +0.8,
+    desc: 'North property boundary adjacent to multi-family residential. Primary noise pathway: HRSG stack exhaust. Barrier: HRSG silencer (rated 18 dB IL). Background ambient: ~48 dB(A) established from pre-construction survey.',
+    sources: ['HRSG Stack', 'Cooling Tower (far)']
+  },
+  {
+    id: 'E1', label: 'NE / GT Side', zone: 'Industrial F',
+    dayLimit: 75, nightLimit: 70,
+    latestDb: 67.1, trend: -1.2,
+    desc: 'Northeast boundary near GE Vernova 7HA.01 turbine intake/exhaust structure. Industrial zoning — highest allowable limits. Dominant source: GT exhaust. Silencer package targets 80 dB(A) at 1 m from exhaust stack. Blade-pass frequency tonal content monitored.',
+    sources: ['7HA.01 GT Exhaust', 'GT Intake', 'HV Bus']
+  },
+  {
+    id: 'E2', label: 'SE / HRSG Side', zone: 'Industrial F',
+    dayLimit: 75, nightLimit: 70,
+    latestDb: 61.4, trend: +0.3,
+    desc: 'Southeast boundary near HRSG and Mainspring LGen yard. Industrial boundary — 75/70 dB limits. LGen tonal signature (reciprocating) is the key risk; acoustic enclosure provides 10+ dB(A) attenuation. LP economizer pipe runs require vibration isolation.',
+    sources: ['HRSG Casing', 'LGen Yard', 'Switchgear Fans']
+  },
+  {
+    id: 'S1', label: 'South Residential', zone: 'Residential A/B',
+    dayLimit: 60, nightLimit: 50,
+    latestDb: 62.7, trend: +1.9,
+    desc: '⚠ EXCEEDANCE — South boundary where residential zone begins. Most sensitive point on campus. Cooling tower fan noise is dominant source at this location. Tower enclosure + barrier wall combination is under engineering review for additional IL. Night limit of 50 dB(A) requires cooling tower fan speed reduction after 22:00.',
+    sources: ['Cooling Tower Fans', 'LGen (distant)', 'HVAC'],
+    exceedance: true
+  },
+  {
+    id: 'S2', label: 'South Industrial', zone: 'Industrial F',
+    dayLimit: 75, nightLimit: 70,
+    latestDb: 58.9, trend: -0.4,
+    desc: 'South boundary on industrial parcels — high limits apply. District energy spine routing and NEORSD pretreatment system are the main ground-level sources in this quadrant. Well within limits. Monitoring maintained for baseline documentation per CBA obligations.',
+    sources: ['District Energy Pipe', 'NEORSD Pretreat', 'Switchgear']
+  },
+  {
+    id: 'W1', label: 'West / E. 55th', zone: 'Residential A/B',
+    dayLimit: 60, nightLimit: 50,
+    latestDb: 57.8, trend: +2.3,
+    desc: 'West boundary on E. 55th Street frontage — residential zone. Second most critical constraint after S1. Primary noise source is 7HA.01 intake structure facing west. 8-ft concrete noise barrier + acoustic panel on west perimeter wall. 3-dB headroom remaining vs. nighttime limit — requires monitoring during peak load cycles.',
+    sources: ['GT Intake (W-facing)', 'HV Transformer', 'Security HVAC']
+  }
+];
+
+const NOISE_SOURCES = [
+  { name: 'GE Vernova 7HA.01 — Exhaust',   lw: 118, contribution: 88, color: '#f06a00', mitigation: 'Exhaust silencer + stack directionality; 22 dB IL target' },
+  { name: 'GE Vernova 7HA.01 — Intake',     lw: 108, contribution: 72, color: '#b04a00', mitigation: 'GT inlet silencer; west-facing screen wall' },
+  { name: 'Cooling Tower Fans',              lw: 104, contribution: 60, color: '#00b4c8', mitigation: 'CT enclosure + low-RPM fans after 22:00 for S1/W1' },
+  { name: 'HRSG Casing / Duct',             lw: 102, contribution: 55, color: '#007f8c', mitigation: 'HRSG duct silencers; lagging on steam extraction lines' },
+  { name: 'Mainspring LGen Units',           lw: 98,  contribution: 42, color: '#6e7a99', mitigation: 'Acoustic enclosure (10 dB IL); vibration isolation mounts' },
+  { name: 'HV Transformers / Switchgear',   lw: 94,  contribution: 32, color: '#3e4460', mitigation: 'Transformer sound wall on E. 55th side; fan-less design pref.' },
+  { name: 'NEORSD Pretreatment / Pumps',    lw: 88,  contribution: 18, color: '#2a2f42', mitigation: 'Below-grade or enclosed pump station; isolation mounts' },
+];
+
+let timeMode = 'day';
+let selectedMP = null;
+let readingLog = [];
+let logIdCounter = 1;
+
+// ── SEED LOG DATA ──────────────────────────────────────────────────────────
+
+function seedLog() {
+  const now = new Date();
+  const entries = [
+    { mpId: 'N1', db: 54.2, inst: 'Continuous Logger',   note: 'Baseline — HRSG at 70% load' },
+    { mpId: 'E1', db: 67.1, inst: 'SLM-1 Brüel & Kjær', note: 'GT full load, stable' },
+    { mpId: 'E2', db: 61.4, inst: 'SLM-2 Larson Davis',  note: 'LGen at 6 of 8 units' },
+    { mpId: 'S1', db: 62.7, inst: 'SLM-1 Brüel & Kjær', note: 'CT fans 100% — exceedance event' },
+    { mpId: 'S2', db: 58.9, inst: 'Continuous Logger',   note: 'Normal operations' },
+    { mpId: 'W1', db: 57.8, inst: 'SLM-3 Pulsar Nova',   note: 'Peak load cycle observed' },
+  ];
+  entries.forEach((e, i) => {
+    const ts = new Date(now.getTime() - (entries.length - i) * 18 * 60000);
+    const mp = MONITOR_POINTS.find(m => m.id === e.mpId);
+    const limit = timeMode === 'day' ? mp.dayLimit : mp.nightLimit;
+    readingLog.push({
+      id: logIdCounter++,
+      ts, mpId: e.mpId, mpLabel: mp.label, db: e.db,
+      limit, inst: e.inst, note: e.note
+    });
+  });
+}
+
+// ── RENDERING ──────────────────────────────────────────────────────────────
+
+function getTimeLimit(mp) {
+  return timeMode === 'day' ? mp.dayLimit : mp.nightLimit;
+}
+
+function dbClass(db, limit) {
+  if (db > limit) return 'over';
+  if (db >= limit - 3) return 'warn';
+  return 'ok';
+}
+
+function renderSidebar() {
+  const list = document.getElementById('mpList');
+  list.innerHTML = MONITOR_POINTS.map(mp => {
+    const limit = getTimeLimit(mp);
+    const cls = dbClass(mp.latestDb, limit);
+    const exc = mp.exceedance ? ' exceedance' : '';
+    const active = selectedMP === mp.id ? ' active' : '';
+    return `<div class="mp-item${exc}${active}" onclick="selectMP('${mp.id}')">
+      <div class="mp-left">
+        <div class="mp-id">${mp.id} — ${mp.label}</div>
+        <div class="mp-loc">${mp.zone}</div>
+      </div>
+      <div class="mp-right">
+        <div class="mp-db ${cls}">${mp.latestDb.toFixed(1)}</div>
+        <div class="mp-limit">lim ${limit} dB</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderKPIs() {
+  const worst = MONITOR_POINTS.reduce((a, b) => {
+    const la = getTimeLimit(a), lb = getTimeLimit(b);
+    const da = a.latestDb - la, db2 = b.latestDb - lb;
+    return da > db2 ? a : b;
+  });
+  const worstLimit = getTimeLimit(worst);
+  const worstCls = dbClass(worst.latestDb, worstLimit);
+
+  const okCount = MONITOR_POINTS.filter(m => dbClass(m.latestDb, getTimeLimit(m)) === 'ok').length;
+  const excCount = MONITOR_POINTS.filter(m => m.exceedance).length;
+
+  document.getElementById('kpi-worst').textContent = worst.latestDb.toFixed(1);
+  document.getElementById('kpi-worst').className = 'kpi-val ' + worstCls;
+  document.getElementById('kpi-worst-mp').textContent = worst.id;
+  document.getElementById('kpi-ok').textContent = okCount;
+  document.getElementById('kpi-total').textContent = MONITOR_POINTS.length;
+  document.getElementById('kpi-exc').textContent = excCount;
+  document.getElementById('kpi-exc').className = 'kpi-val ' + (excCount > 0 ? 'over' : 'ok');
+  document.getElementById('kpi-mode').textContent = timeMode === 'day' ? 'DAY' : 'NIGHT';
+  document.getElementById('kpi-mode').className = 'kpi-val ' + (timeMode === 'day' ? 'warn' : 'teal');
+}
+
+function selectMP(id) {
+  selectedMP = id;
+  const mp = MONITOR_POINTS.find(m => m.id === id);
+  const limit = getTimeLimit(mp);
+  const headroom = limit - mp.latestDb;
+  const cls = dbClass(mp.latestDb, limit);
+  const trendStr = (mp.trend >= 0 ? '+' : '') + mp.trend.toFixed(1) + ' dB/h';
+  const trendCls = mp.trend > 0 ? 'warn' : 'ok';
+
+  document.getElementById('detail-title').textContent = `${mp.id} — ${mp.label}`;
+  document.getElementById('detail-zone').textContent = mp.zone;
+  document.getElementById('detail-zone').className = 'panel-tag ' + (cls === 'over' ? 'tag-red' : cls === 'warn' ? 'tag-yellow' : 'tag-green');
+
+  document.getElementById('d-reading').textContent = mp.latestDb.toFixed(1) + ' dB(A)';
+  document.getElementById('d-reading').className = 'detail-val ' + cls;
+  document.getElementById('d-limit').textContent = limit + ' dB(A)';
+  document.getElementById('d-headroom').textContent = (headroom >= 0 ? '+' : '') + headroom.toFixed(1) + ' dB';
+  document.getElementById('d-headroom').className = 'detail-val ' + (headroom < 0 ? 'over' : headroom < 3 ? 'warn' : 'ok');
+  document.getElementById('d-trend').textContent = trendStr;
+  document.getElementById('d-trend').className = 'detail-val ' + trendCls;
+
+  const gaugePct = Math.min(100, (mp.latestDb / 80) * 100);
+  document.getElementById('gauge-fill').style.width = gaugePct + '%';
+  document.getElementById('gauge-limit-label').textContent = `Limit ${limit} dB`;
+  document.getElementById('detail-desc').textContent = mp.desc;
+
+  // Highlight SVG point
+  MONITOR_POINTS.forEach(m => {
+    const el = document.getElementById('mp-svg-' + m.id);
+    if (el) el.style.opacity = m.id === id ? '1' : '0.4';
+  });
+
+  renderSidebar();
+}
+
+function renderSourceTable() {
+  const tbody = document.getElementById('sourceTableBody');
+  tbody.innerHTML = NOISE_SOURCES.map(src => {
+    const pct = src.contribution;
+    return `<tr>
+      <td class="src-name">${src.name}</td>
+      <td><span class="src-db" style="color:${src.color}">${src.lw}</span></td>
+      <td>
+        <div class="contribution-bar">
+          <div class="contribution-fill" style="width:${pct}%;background:${src.color}"></div>
+        </div>
+      </td>
+      <td class="src-mitigation">${src.mitigation}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderLog() {
+  const tbody = document.getElementById('logTableBody');
+  const sorted = [...readingLog].sort((a, b) => b.ts - a.ts);
+  tbody.innerHTML = sorted.map(e => {
+    const delta = e.db - e.limit;
+    const cls = delta > 0 ? 'over' : delta > -3 ? 'warn' : 'ok';
+    const pillClass = delta > 0 ? 'pill-over' : delta > -3 ? 'pill-warn' : 'pill-ok';
+    const pillText = delta > 0 ? 'EXCEEDANCE' : delta > -3 ? 'NEAR LIMIT' : 'COMPLIANT';
+    const ts = e.ts.toLocaleString('en-US', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false });
+    return `<tr>
+      <td class="log-ts">${ts}</td>
+      <td class="log-mp" style="color:var(--teal)">${e.mpId}</td>
+      <td class="log-note">${e.mpLabel}</td>
+      <td class="log-reading ${cls}">${e.db.toFixed(1)} dB</td>
+      <td class="log-note">${e.limit} dB</td>
+      <td class="log-reading ${cls}">${delta >= 0 ? '+' : ''}${delta.toFixed(1)}</td>
+      <td><span class="status-pill ${pillClass}">${pillText}</span></td>
+      <td class="log-note">${e.inst}</td>
+      <td class="log-note">${e.note || '—'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('log-count').textContent = readingLog.length + ' entries';
+}
+
+// ── ACTIONS ────────────────────────────────────────────────────────────────
+
+function setTimeMode(mode) {
+  timeMode = mode;
+  document.getElementById('btn-day').classList.toggle('active', mode === 'day');
+  document.getElementById('btn-night').classList.toggle('active', mode === 'night');
+  renderAll();
+  if (selectedMP) selectMP(selectedMP);
+}
+
+function submitReading() {
+  const mpId = document.getElementById('inp-mp').value;
+  const dbVal = parseFloat(document.getElementById('inp-db').value);
+  if (isNaN(dbVal)) { alert('Enter a valid dB(A) reading.'); return; }
+  const inst = document.getElementById('inp-inst').value;
+  const note = document.getElementById('inp-note').value;
+  const mp = MONITOR_POINTS.find(m => m.id === mpId);
+  const limit = getTimeLimit(mp);
+
+  readingLog.push({
+    id: logIdCounter++,
+    ts: new Date(), mpId, mpLabel: mp.label, db: dbVal,
+    limit, inst, note
+  });
+  mp.latestDb = dbVal;
+  mp.exceedance = dbVal > limit;
+
+  document.getElementById('inp-db').value = '';
+  document.getElementById('inp-note').value = '';
+  renderAll();
+}
+
+function logReading() {
+  document.getElementById('inp-mp').focus();
+  document.getElementById('inp-mp').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function exportLog() {
+  const headers = ['ID', 'Timestamp', 'Monitor Point', 'Location', 'Reading_dBA', 'Limit_dBA', 'Delta_dBA', 'Status', 'Instrument', 'Notes'];
+  const rows = readingLog.map(e => {
+    const delta = e.db - e.limit;
+    const status = delta > 0 ? 'EXCEEDANCE' : delta > -3 ? 'NEAR_LIMIT' : 'COMPLIANT';
+    return [e.id, e.ts.toISOString(), e.mpId, e.mpLabel, e.db.toFixed(1), e.limit, delta.toFixed(1), status, e.inst, e.note || ''].join(',');
+  });
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `Morabito_FencelineNoise_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function renderAll() {
+  renderKPIs();
+  renderSidebar();
+  renderSourceTable();
+  renderLog();
+}
+
+// ── CLOCK ──────────────────────────────────────────────────────────────────
+
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours();
+  const isDay = h >= 7 && h < 22;
+  if (isDay !== (timeMode === 'day')) { /* auto-switch notification could go here */ }
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('en-US', { hour12: false });
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+
+seedLog();
+renderAll();
+selectMP('S1');  // Default to the exceedance point
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+</body>
+</html>

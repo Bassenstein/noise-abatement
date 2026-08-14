@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Noise Abatement for Hyperscale Data Centers — City of Cleveland | FOS216</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg:          #0d0f12;
+    --bg-panel:    #141720;
+    --bg-card:     #1a1e2a;
+    --bg-raised:   #20253a;
+    --border:      #2a2f42;
+    --border-hi:   #3a4060;
+
+    --orange:      #f06a00;
+    --orange-dim:  #b04a00;
+    --orange-glow: rgba(240,106,0,0.12);
+    --teal:        #00b4c8;
+    --teal-dim:    #007f8c;
+    --teal-glow:   rgba(0,180,200,0.10);
+    --steel:       #6e7a99;
+    --steel-dim:   #3e4460;
+
+    --green:       #2dca72;
+    --green-dim:   #1a7a44;
+    --yellow:      #f5c518;
+    --yellow-dim:  #8a6e00;
+    --red:         #e03e3e;
+    --red-dim:     #7a1c1c;
+
+    --text-hi:     #f0f2f8;
+    --text-mid:    #9aa0ba;
+    --text-lo:     #5a617a;
+
+    --mono:        'JetBrains Mono', monospace;
+    --sans:        'Archivo', sans-serif;
+    --r:           4px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-hi);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: sticky; top: 0; z-index: 200;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 32px; height: 56px; gap: 0;
+  }
+  .nav-brand {
+    display: flex; align-items: center; gap: 12px;
+    margin-right: 40px; flex-shrink: 0;
+  }
+  .nav-chip {
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    color: var(--orange); border: 1px solid var(--orange-dim);
+    padding: 3px 8px; border-radius: 2px; letter-spacing: 0.08em;
+  }
+  .nav-title { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-hi); }
+  .nav-links { display: flex; gap: 2px; overflow-x: auto; flex: 1; }
+  .nav-link {
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    color: var(--text-lo); padding: 6px 14px; border-radius: var(--r);
+    text-decoration: none; white-space: nowrap;
+    transition: color 0.15s, background 0.15s;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .nav-link:hover { color: var(--teal); background: var(--teal-glow); }
+  .nav-link.active { color: var(--teal); }
+  .nav-right { margin-left: auto; flex-shrink: 0; }
+  .doc-badge {
+    font-family: var(--mono); font-size: 9px; color: var(--text-lo);
+    border: 1px solid var(--border); padding: 3px 10px; border-radius: 2px;
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 64px 32px 56px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(240,106,0,0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 60% at 20% 80%, rgba(0,180,200,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.16em;
+    color: var(--orange); margin-bottom: 18px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .hero-eyebrow::after {
+    content: ''; flex: 1; max-width: 48px; height: 1px;
+    background: var(--orange-dim);
+  }
+  .hero-h1 {
+    font-size: clamp(28px, 4vw, 46px);
+    font-weight: 700; line-height: 1.12;
+    letter-spacing: -0.02em; color: var(--text-hi);
+    max-width: 720px; margin-bottom: 20px;
+  }
+  .hero-h1 span { color: var(--orange); }
+  .hero-sub {
+    font-size: 15px; color: var(--text-mid); max-width: 600px;
+    line-height: 1.7; margin-bottom: 36px;
+  }
+  .hero-meta {
+    display: flex; gap: 32px; flex-wrap: wrap;
+  }
+  .hero-meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .hero-meta-label { font-family: var(--mono); font-size: 9px; color: var(--text-lo); text-transform: uppercase; letter-spacing: 0.1em; }
+  .hero-meta-val { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--text-mid); }
+  .hero-meta-val.orange { color: var(--orange); }
+  .hero-meta-val.teal { color: var(--teal); }
+
+  /* ─── LAYOUT ─── */
+  .doc-wrap {
+    max-width: 1200px; margin: 0 auto;
+    padding: 48px 32px;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+  .toc {
+    position: sticky; top: 72px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 20px;
+  }
+  .toc-title { font-family: var(--mono); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-lo); margin-bottom: 14px; }
+  .toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+  .toc-list li a {
+    font-size: 11px; color: var(--text-lo); text-decoration: none;
+    display: block; padding: 4px 8px; border-radius: 2px;
+    transition: color 0.12s, background 0.12s;
+    line-height: 1.4;
+  }
+  .toc-list li a:hover { color: var(--teal); background: var(--teal-glow); }
+  .toc-list li.toc-sub a { padding-left: 16px; font-size: 10px; }
+  .toc-divider { height: 1px; background: var(--border); margin: 8px 0; }
+
+  /* ─── CONTENT ─── */
+  .doc-content { min-width: 0; }
+
+  .doc-section { margin-bottom: 56px; }
+  .doc-section:last-child { margin-bottom: 0; }
+
+  .section-eyebrow {
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.16em;
+    color: var(--teal); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-eyebrow::before {
+    content: ''; width: 24px; height: 1px; background: var(--teal-dim);
+  }
+  .section-num {
+    font-family: var(--mono); font-size: 10px; color: var(--orange);
+    margin-right: 6px;
+  }
+  h2.doc-h2 {
+    font-size: 22px; font-weight: 700; letter-spacing: -0.01em;
+    color: var(--text-hi); margin-bottom: 6px; line-height: 1.2;
+  }
+  .section-rule {
+    height: 1px; background: linear-gradient(90deg, var(--border-hi) 0%, transparent 100%);
+    margin: 14px 0 24px;
+  }
+  p.doc-p { color: var(--text-mid); margin-bottom: 14px; line-height: 1.75; }
+  p.doc-p:last-child { margin-bottom: 0; }
+
+  h3.doc-h3 {
+    font-size: 14px; font-weight: 700; color: var(--text-hi);
+    margin: 28px 0 10px; letter-spacing: 0.02em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  h3.doc-h3::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ─── CALLOUT ─── */
+  .callout {
+    border-radius: var(--r); padding: 16px 18px;
+    margin: 20px 0; border-left: 3px solid;
+    display: flex; gap: 14px;
+  }
+  .callout.info   { background: var(--teal-glow);   border-color: var(--teal); }
+  .callout.warn   { background: rgba(245,197,24,0.08); border-color: var(--yellow); }
+  .callout.danger { background: rgba(224,62,62,0.08);  border-color: var(--red); }
+  .callout.orange { background: var(--orange-glow);  border-color: var(--orange); }
+  .callout-icon { font-size: 16px; margin-top: 2px; flex-shrink: 0; }
+  .callout-body { flex: 1; }
+  .callout-title { font-weight: 700; font-size: 12px; margin-bottom: 4px; }
+  .callout.info   .callout-title { color: var(--teal); }
+  .callout.warn   .callout-title { color: var(--yellow); }
+  .callout.danger .callout-title { color: var(--red); }
+  .callout.orange .callout-title { color: var(--orange); }
+  .callout-text { font-size: 12px; color: var(--text-mid); line-height: 1.6; }
+
+  /* ─── LIMIT TABLE ─── */
+  .limit-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+  .limit-table th {
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-lo); padding: 8px 12px;
+    border-bottom: 2px solid var(--border-hi); text-align: left;
+    background: var(--bg-panel);
+  }
+  .limit-table td {
+    padding: 10px 12px; font-size: 12px; color: var(--text-mid);
+    border-bottom: 1px solid var(--border);
+  }
+  .limit-table tr:last-child td { border-bottom: none; }
+  .limit-table tr:hover td { background: var(--bg-raised); }
+  .td-mono { font-family: var(--mono); font-weight: 700; }
+  .td-day  { color: var(--yellow); }
+  .td-night { color: var(--teal); }
+  .td-zone { font-weight: 600; color: var(--text-hi); }
+  .td-notes { font-size: 11px; color: var(--text-lo); }
+
+  /* ─── SOURCE MATRIX ─── */
+  .source-matrix { width: 100%; border-collapse: collapse; margin: 20px 0; }
+  .source-matrix th {
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-lo); padding: 8px 12px;
+    border-bottom: 2px solid var(--border-hi); text-align: left;
+    background: var(--bg-panel);
+  }
+  .source-matrix td {
+    padding: 9px 12px; font-size: 12px; color: var(--text-mid);
+    border-bottom: 1px solid var(--border); vertical-align: top;
+  }
+  .source-matrix tr:last-child td { border-bottom: none; }
+  .source-matrix tr:hover td { background: var(--bg-raised); }
+  .sm-source { font-weight: 700; color: var(--text-hi); }
+  .sm-lw { font-family: var(--mono); font-weight: 700; color: var(--orange); }
+  .sm-freq { font-family: var(--mono); font-size: 11px; color: var(--steel); }
+  .sm-risk { display: inline-block; font-family: var(--mono); font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+  .risk-hi   { background: var(--red-dim);    color: var(--red); }
+  .risk-med  { background: var(--yellow-dim); color: var(--yellow); }
+  .risk-lo   { background: var(--green-dim);  color: var(--green); }
+
+  /* ─── MITIGATION CARDS ─── */
+  .mit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 20px 0; }
+  .mit-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px;
+  }
+  .mit-card-head {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 12px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mit-icon {
+    width: 32px; height: 32px; border-radius: var(--r);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .mit-card-title { font-size: 12px; font-weight: 700; color: var(--text-hi); line-height: 1.3; }
+  .mit-card-sub { font-family: var(--mono); font-size: 9px; color: var(--text-lo); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .mit-specs { display: flex; flex-direction: column; gap: 6px; }
+  .mit-spec-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .mit-spec-key { font-size: 11px; color: var(--text-lo); line-height: 1.4; }
+  .mit-spec-val { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--teal); white-space: nowrap; }
+
+  /* ─── MONITORING REQUIREMENTS TABLE ─── */
+  .mon-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+  .mon-table th {
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-lo); padding: 8px 12px;
+    border-bottom: 2px solid var(--border-hi); background: var(--bg-panel);
+    text-align: left;
+  }
+  .mon-table td {
+    padding: 9px 12px; font-size: 12px; color: var(--text-mid);
+    border-bottom: 1px solid var(--border); vertical-align: top;
+  }
+  .mon-table tr:last-child td { border-bottom: none; }
+  .mon-table tr:hover td { background: var(--bg-raised); }
+  .mon-req { font-weight: 600; color: var(--text-hi); }
+
+  /* ─── EQUIPMENT PROCUREMENT TABLE ─── */
+  .equip-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+  .equip-table th {
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-lo); padding: 8px 12px;
+    border-bottom: 2px solid var(--border-hi); background: var(--bg-panel);
+    text-align: left;
+  }
+  .equip-table td {
+    padding: 9px 12px; font-size: 12px; color: var(--text-mid);
+    border-bottom: 1px solid var(--border); vertical-align: top;
+  }
+  .equip-table tr:last-child td { border-bottom: none; }
+  .equip-table tr:hover td { background: var(--bg-raised); }
+  .equip-table tfoot td {
+    border-top: 2px solid var(--border-hi); border-bottom: none;
+    font-weight: 700; color: var(--orange); font-family: var(--mono);
+    background: var(--bg-panel);
+  }
+  .equip-name { font-weight: 700; color: var(--text-hi); }
+  .equip-cost { font-family: var(--mono); font-weight: 700; color: var(--orange); }
+  .equip-annual { font-family: var(--mono); font-size: 11px; color: var(--teal); }
+
+  /* ─── PHASED TIMELINE ─── */
+  .phase-list { display: flex; flex-direction: column; gap: 0; margin: 20px 0; position: relative; }
+  .phase-list::before {
+    content: ''; position: absolute; left: 19px; top: 20px; bottom: 20px;
+    width: 2px; background: var(--border); z-index: 0;
+  }
+  .phase-item { display: flex; gap: 20px; position: relative; z-index: 1; padding-bottom: 28px; }
+  .phase-item:last-child { padding-bottom: 0; }
+  .phase-dot {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    border: 2px solid; margin-top: 2px;
+  }
+  .phase-dot.p1 { background: rgba(240,106,0,0.15); border-color: var(--orange); color: var(--orange); }
+  .phase-dot.p2 { background: rgba(0,180,200,0.12); border-color: var(--teal);   color: var(--teal); }
+  .phase-dot.p3 { background: rgba(245,197,24,0.12); border-color: var(--yellow); color: var(--yellow); }
+  .phase-dot.p4 { background: rgba(45,202,114,0.12); border-color: var(--green);  color: var(--green); }
+  .phase-body { flex: 1; }
+  .phase-tag { font-family: var(--mono); font-size: 9px; color: var(--text-lo); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .phase-title { font-size: 14px; font-weight: 700; color: var(--text-hi); margin-bottom: 6px; }
+  .phase-desc { font-size: 12px; color: var(--text-mid); line-height: 1.6; }
+  .phase-items { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+  .phase-items li { font-size: 11px; color: var(--text-lo); list-style: none; padding-left: 14px; position: relative; }
+  .phase-items li::before { content: '—'; position: absolute; left: 0; color: var(--border-hi); }
+
+  /* ─── COST SUMMARY ─── */
+  .cost-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+  .cost-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 16px;
+  }
+  .cost-card.total-card {
+    grid-column: span 3;
+    background: var(--bg-panel);
+    border-color: var(--orange-dim);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 24px;
+  }
+  .cost-label { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-lo); margin-bottom: 6px; }
+  .cost-val { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--text-hi); line-height: 1; }
+  .cost-val.orange { color: var(--orange); font-size: 26px; }
+  .cost-val.teal   { color: var(--teal); }
+  .cost-note { font-size: 10px; color: var(--text-lo); margin-top: 6px; line-height: 1.5; }
+
+  /* ─── ORDINANCE BOX ─── */
+  .ord-box {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--r);
+    padding: 20px 24px;
+    margin: 20px 0;
+  }
+  .ord-box-title {
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--teal);
+    margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ord-provisions { display: flex; flex-direction: column; gap: 10px; }
+  .ord-provision { display: flex; gap: 16px; align-items: baseline; }
+  .ord-code { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--orange); width: 80px; flex-shrink: 0; }
+  .ord-text { font-size: 12px; color: var(--text-mid); line-height: 1.5; }
+
+  /* ─── FOOTER ─── */
+  .doc-footer {
+    background: var(--bg-panel);
+    border-top: 1px solid var(--border);
+    padding: 28px 32px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .footer-left { display: flex; flex-direction: column; gap: 4px; }
+  .footer-doc-title { font-size: 12px; font-weight: 600; color: var(--text-mid); }
+  .footer-doc-meta { font-family: var(--mono); font-size: 10px; color: var(--text-lo); }
+  .footer-fos { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--orange); letter-spacing: 0.06em; }
+  .footer-fos-row { display: flex; align-items: center; gap: 12px; }
+  .footer-fos-row .logomark {
+    display: block;
+    filter:
+      drop-shadow(0 0 3px rgba(255,255,255,.95))
+      drop-shadow(0 0 9px rgba(255,255,255,.65))
+      drop-shadow(0 0 21px rgba(255,255,255,.35))
+      drop-shadow(0 0 45px rgba(255,199,44,.20));
+  }
+  .footer-disclaimer { font-size: 10px; color: var(--text-lo); max-width: 500px; line-height: 1.5; }
+
+  /* ─── INLINE CODE ─── */
+  code {
+    font-family: var(--mono); font-size: 11px;
+    background: var(--bg-raised); border: 1px solid var(--border);
+    padding: 1px 5px; border-radius: 2px; color: var(--teal);
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 860px) {
+    .doc-wrap { grid-template-columns: 1fr; }
+    .toc { position: static; }
+    .mit-grid { grid-template-columns: 1fr; }
+    .cost-grid { grid-template-columns: 1fr 1fr; }
+    .cost-card.total-card { grid-column: span 2; flex-direction: column; gap: 12px; }
+    nav .nav-links { display: none; }
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <span class="nav-chip">FOS216</span>
+    <span class="nav-title">Cleveland Data Center Noise Abatement</span>
+  </div>
+  <div class="nav-links">
+    <a class="nav-link" href="#overview">Overview</a>
+    <a class="nav-link" href="#ordinance">§551 Ordinance</a>
+    <a class="nav-link" href="#sources">Noise Sources</a>
+    <a class="nav-link" href="#mitigation">Mitigation</a>
+    <a class="nav-link" href="#monitoring">Monitoring</a>
+    <a class="nav-link" href="#equipment">Equipment</a>
+    <a class="nav-link" href="#phasing">Phasing</a>
+    <a class="nav-link" href="#costs">Cost Summary</a>
+  </div>
+  <div class="nav-right">
+    <span class="doc-badge">REV 1.0 · JUNE 2026</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">The FixOurStreets216 Project · Technical Guidance Series</div>
+  <h1 class="hero-h1">Noise Abatement for<br><span>Hyperscale Data Centers</span><br>in the City of Cleveland</h1>
+  <p class="hero-sub">A technical framework for acoustic compliance, fence-line monitoring, noise mitigation design, and supporting equipment procurement — prepared under Cleveland Codified Ordinance §551 and Ohio Title V permit requirements.</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item">
+      <span class="hero-meta-label">Governing Ordinance</span>
+      <span class="hero-meta-val teal">Cleveland CCO §551</span>
+    </div>
+    <div class="hero-meta-item">
+      <span class="hero-meta-label">State Framework</span>
+      <span class="hero-meta-val">Ohio EPA Title V / RACT</span>
+    </div>
+    <div class="hero-meta-item">
+      <span class="hero-meta-label">Measurement Standard</span>
+      <span class="hero-meta-val">ANSI S1.4 / IEC 61672</span>
+    </div>
+    <div class="hero-meta-item">
+      <span class="hero-meta-label">Typical Acoustic Package</span>
+      <span class="hero-meta-val orange">$10M – $18M</span>
+    </div>
+    <div class="hero-meta-item">
+      <span class="hero-meta-label">Monitoring Program</span>
+      <span class="hero-meta-val">$190K – $296K installed</span>
+    </div>
+    <div class="hero-meta-item">
+      <span class="hero-meta-label">Prepared By</span>
+      <span class="hero-meta-val orange">The FixOurStreets216 Project</span>
+    </div>
+  </div>
+</section>
+
+<!-- DOCUMENT BODY -->
+<div class="doc-wrap">
+
+  <!-- TOC -->
+  <aside class="toc">
+    <div class="toc-title">Contents</div>
+    <ul class="toc-list">
+      <li><a href="#overview">1. Overview</a></li>
+      <li class="toc-sub"><a href="#overview-scope">Scope &amp; Applicability</a></li>
+      <li class="toc-sub"><a href="#overview-context">Cleveland Context</a></li>
+      <div class="toc-divider"></div>
+      <li><a href="#ordinance">2. §551 Ordinance</a></li>
+      <li class="toc-sub"><a href="#ordinance-limits">Noise Limits by Zone</a></li>
+      <li class="toc-sub"><a href="#ordinance-measurement">Measurement Protocol</a></li>
+      <li class="toc-sub"><a href="#ordinance-penalties">Tonal &amp; Impulsive Penalties</a></li>
+      <div class="toc-divider"></div>
+      <li><a href="#sources">3. Noise Sources</a></li>
+      <li class="toc-sub"><a href="#sources-matrix">Source Matrix</a></li>
+      <div class="toc-divider"></div>
+      <li><a href="#mitigation">4. Mitigation Design</a></li>
+      <li class="toc-sub"><a href="#mitigation-generation">Generation Equipment</a></li>
+      <li class="toc-sub"><a href="#mitigation-cooling">Cooling Systems</a></li>
+      <li class="toc-sub"><a href="#mitigation-perimeter">Perimeter Barriers</a></li>
+      <div class="toc-divider"></div>
+      <li><a href="#monitoring">5. Fence Line Monitoring</a></li>
+      <li class="toc-sub"><a href="#monitoring-placement">Point Placement</a></li>
+      <li class="toc-sub"><a href="#monitoring-requirements">Requirements</a></li>
+      <div class="toc-divider"></div>
+      <li><a href="#equipment">6. Supporting Equipment</a></li>
+      <div class="toc-divider"></div>
+      <li><a href="#phasing">7. Implementation Phasing</a></li>
+      <div class="toc-divider"></div>
+      <li><a href="#costs">8. Cost Summary</a></li>
+    </ul>
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="doc-content">
+
+    <!-- 1. OVERVIEW -->
+    <section class="doc-section" id="overview">
+      <div class="section-eyebrow"><span class="section-num">§ 01</span>Overview</div>
+      <h2 class="doc-h2">Scope, Purpose, and Cleveland Context</h2>
+      <div class="section-rule"></div>
+
+      <div id="overview-scope">
+        <h3 class="doc-h3">Scope &amp; Applicability</h3>
+        <p class="doc-p">This document establishes a technical framework for noise abatement and fence-line acoustic monitoring at hyperscale data centers proposed for siting within or adjacent to Cleveland's residential and mixed-use neighborhoods. It is intended for use by project developers, acoustic engineers, city permitting staff, and community benefit agreement negotiators.</p>
+        <p class="doc-p">A hyperscale data center, as defined here, is a facility of 100 MW or greater critical IT load, typically co-located with on-site power generation (gas turbine, combined cycle, linear generator, or fuel cell systems) and large mechanical cooling infrastructure. These facilities introduce noise sources of a scale, intensity, and operational continuity that standard commercial or industrial noise provisions were not designed to address.</p>
+
+        <div class="callout info">
+          <div class="callout-icon">ℹ</div>
+          <div class="callout-body">
+            <div class="callout-title">Applicability Threshold</div>
+            <div class="callout-text">This framework applies to any proposed Hyperscale Data Center facility with (a) aggregate installed generation capacity exceeding 50 MW, or (b) cooling tower aggregate fan motor capacity exceeding 2 MW, or (c) proposed siting within 1,000 feet of a residential zoning district boundary. Projects below these thresholds may still be subject to §551 but are not required to follow this full framework.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="overview-context">
+        <h3 class="doc-h3">Cleveland Context</h3>
+        <p class="doc-p">Cleveland's industrial corridors — the Industrial Valley, Opportunity Corridor, Slavic Village, and Collinwood manufacturing zones — are emerging targets for hyperscale data center development driven by available land, Great Lakes cooling water access, and the Midwest's growing power infrastructure. These sites frequently abut residential neighborhoods with pre-existing noise sensitivities and environmental justice considerations addressed under Cleveland Ordinance 2023-014.</p>
+        <p class="doc-p">Unlike traditional data centers (fan arrays, rooftop HVAC), hyperscale facilities often incorporate combustion turbines, combined heat and power systems, and large-tonnage absorption chilling — source types with sound power levels 20–40 dB above conventional data center noise floors. The standard §551 residential limit of 50 dB(A) at night is achievable but requires a disciplined, layered acoustic design program beginning at site selection.</p>
+
+        <div class="callout orange">
+          <div class="callout-icon">⚡</div>
+          <div class="callout-body">
+            <div class="callout-title">Key Challenge: 24/7 Continuous Operation</div>
+            <div class="callout-text">Hyperscale data centers operate at or near full load continuously, including nighttime hours when §551 limits are most restrictive. A gas turbine at full load producing 118 dB(A) sound power at the exhaust stack must be attenuated to 50 dB(A) at a residential property line 300 meters away — requiring approximately 35–40 dB of combined attenuation from geometry, barriers, and active silencing systems.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. §551 ORDINANCE -->
+    <section class="doc-section" id="ordinance">
+      <div class="section-eyebrow"><span class="section-num">§ 02</span>Cleveland Codified Ordinance §551</div>
+      <h2 class="doc-h2">Noise Control Limits, Measurement Protocol, and Penalty Provisions</h2>
+      <div class="section-rule"></div>
+
+      <div id="ordinance-limits">
+        <h3 class="doc-h3">Noise Limits by Receiving Zone</h3>
+        <p class="doc-p">§551 establishes maximum permissible sound levels by the zoning classification of the <em>receiving</em> property — i.e., the zone adjacent to or beyond the data center's fence line, not the data center's own zoning. For hyperscale facilities, the most restrictive applicable limits are almost always driven by residential uses on adjacent parcels.</p>
+
+        <table class="limit-table">
+          <thead>
+            <tr>
+              <th>Receiving Zone</th>
+              <th>Zone Class</th>
+              <th>Day Limit<br><span style="font-weight:400;font-size:9px">7:00 AM – 10:00 PM</span></th>
+              <th>Night Limit<br><span style="font-weight:400;font-size:9px">10:00 PM – 7:00 AM</span></th>
+              <th>Hyperscale Relevance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-zone">Single-Family Residential</td>
+              <td class="td-mono">A / B</td>
+              <td class="td-mono td-day">60 dB(A)</td>
+              <td class="td-mono td-night">50 dB(A)</td>
+              <td class="td-notes">Most critical constraint; drives barrier heights, silencer sizing, and CT fan control after 22:00</td>
+            </tr>
+            <tr>
+              <td class="td-zone">Multi-Family Residential</td>
+              <td class="td-mono">C</td>
+              <td class="td-mono td-day">60 dB(A)</td>
+              <td class="td-mono td-night">55 dB(A)</td>
+              <td class="td-notes">Common on north/west boundaries; 5 dB more headroom at night than A/B</td>
+            </tr>
+            <tr>
+              <td class="td-zone">Commercial / Retail</td>
+              <td class="td-mono">E</td>
+              <td class="td-mono td-day">65 dB(A)</td>
+              <td class="td-mono td-night">60 dB(A)</td>
+              <td class="td-notes">Street-facing boundaries with retail uses; manageable with GT intake screens</td>
+            </tr>
+            <tr>
+              <td class="td-zone">Light Industrial</td>
+              <td class="td-mono">F-1</td>
+              <td class="td-mono td-day">75 dB(A)</td>
+              <td class="td-mono td-night">70 dB(A)</td>
+              <td class="td-notes">Industrial-to-industrial boundaries; GT exhaust silencer alone typically sufficient</td>
+            </tr>
+            <tr>
+              <td class="td-zone">Heavy Industrial</td>
+              <td class="td-mono">F-2</td>
+              <td class="td-mono td-day">80 dB(A)</td>
+              <td class="td-mono td-night">75 dB(A)</td>
+              <td class="td-notes">Rarest case; NEORSD / ArcelorMittal adjacency; minimal additional attenuation needed</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="ordinance-measurement">
+        <h3 class="doc-h3">§551.02 Measurement Protocol</h3>
+        <div class="ord-box">
+          <div class="ord-box-title">Cleveland CCO §551 — Key Measurement Requirements</div>
+          <div class="ord-provisions">
+            <div class="ord-provision"><span class="ord-code">§551.02(a)</span><span class="ord-text">Sound level measurements shall be taken with a Type 1 or Type 2 sound level meter meeting ANSI S1.4 / IEC 61672-1 standards, A-weighted, slow response.</span></div>
+            <div class="ord-provision"><span class="ord-code">§551.02(b)</span><span class="ord-text">Measurements shall be taken at or beyond the property line, at a height of 4–5 feet above grade, and no closer than 3 feet from any reflective surface (walls, fences, vehicles).</span></div>
+            <div class="ord-provision"><span class="ord-code">§551.02(c)</span><span class="ord-text">A valid sample consists of the average of three consecutive 1-minute Leq readings under stable meteorological conditions.</span></div>
+            <div class="ord-provision"><span class="ord-code">§551.02(d)</span><span class="ord-text">Meteorological validity conditions: wind speed less than 5 m/s (11 mph) at measurement height; no precipitation; background ambient at least 10 dB below the measured level to confirm source attribution.</span></div>
+            <div class="ord-provision"><span class="ord-code">§551.02(e)</span><span class="ord-text">Atmospheric absorption correction per ISO 9613-1 is required for propagation paths exceeding 100 meters. Temperature and relative humidity must be recorded at each measurement event.</span></div>
+            <div class="ord-provision"><span class="ord-code">§551.05</span><span class="ord-text">Enforcement authority rests with the Commissioner of Building and Housing. Continuous exceedances at a residential boundary constitute a public nuisance subject to abatement order.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="ordinance-penalties">
+        <h3 class="doc-h3">Tonal and Impulsive Noise Penalties</h3>
+        <p class="doc-p">§551 imposes a +5 dB(A) penalty on the measured level when the noise contains audible tonal components (discrete frequency prominences of 5 dB or more above the adjacent 1/3-octave bands) or impulsive characteristics. For hyperscale data centers, two source types routinely trigger these penalties if not properly designed:</p>
+
+        <div class="callout danger">
+          <div class="callout-icon">⚠</div>
+          <div class="callout-body">
+            <div class="callout-title">Tonal Penalty — Linear Generator (LGen) Blade-Pass Frequency</div>
+            <div class="callout-text">Mainspring and similar linear reciprocating generator systems produce a strong tonal component at the piston operating frequency (typically 60 Hz and harmonics). At residential boundaries, this tonal content can trigger the +5 dB penalty, effectively reducing the available headroom from 10 dB to 5 dB. Acoustic enclosures with a minimum 10 dB(A) insertion loss are required at the LGen building envelope. Blade-pass frequency content must be measured at the fence line and confirmed below the tonal threshold before commissioning.</div>
+          </div>
+        </div>
+
+        <div class="callout danger">
+          <div class="callout-icon">⚠</div>
+          <div class="callout-body">
+            <div class="callout-title">Tonal Penalty — Gas Turbine Blade-Pass / Combustion Tone</div>
+            <div class="callout-text">Gas turbines (GE Vernova 7HA series, Kawasaki H2 turbines) produce blade-pass frequency content in the 500–4,000 Hz range depending on rotor speed and stage count. Combustion dynamics can introduce low-frequency tonal content (50–200 Hz) that propagates over long distances. Exhaust silencer design must target tonal content, not just broadband A-weighted levels. Third-octave spectra measurement at fence line is required during commissioning to confirm no tonal penalties apply.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. NOISE SOURCES -->
+    <section class="doc-section" id="sources">
+      <div class="section-eyebrow"><span class="section-num">§ 03</span>Noise Sources</div>
+      <h2 class="doc-h2">Hyperscale Data Center Noise Source Matrix</h2>
+      <div class="section-rule"></div>
+
+      <div id="sources-matrix">
+        <p class="doc-p">The following matrix covers the major acoustic sources present at a hyperscale campus with on-site gas turbine, linear generator, and large-tonnage cooling infrastructure. Sound power levels (Lw) are indicative for equipment in the 100–300 MW generation class. Fence-line contributions assume 200–400 m propagation to a residential boundary with no intervening barriers.</p>
+
+        <table class="source-matrix">
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th>Lw dB(A)</th>
+              <th>Peak Frequency</th>
+              <th>Tonal Risk</th>
+              <th>Residential Boundary Risk</th>
+              <th>Primary Mitigation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="sm-source">Gas Turbine — Exhaust Stack<br><span style="font-size:10px;color:var(--text-lo)">GE Vernova 7HA.01 / Kawasaki L30A / H2 class</span></td>
+              <td class="sm-lw">115–120</td>
+              <td class="sm-freq">250–2k Hz</td>
+              <td><span class="sm-risk risk-hi">HIGH</span></td>
+              <td><span class="sm-risk risk-hi">CRITICAL</span></td>
+              <td style="font-size:11px;color:var(--text-lo)">Exhaust silencer (18–22 dB IL); stack height; directional discharge away from residential</td>
+            </tr>
+            <tr>
+              <td class="sm-source">Gas Turbine — Inlet<br><span style="font-size:10px;color:var(--text-lo)">Intake filter house and bellmouth</span></td>
+              <td class="sm-lw">108–112</td>
+              <td class="sm-freq">500–4k Hz</td>
+              <td><span class="sm-risk risk-hi">HIGH</span></td>
+              <td><span class="sm-risk risk-hi">HIGH</span></td>
+              <td style="font-size:11px;color:var(--text-lo)">GT inlet silencer; west-facing screen wall; acoustic louvre on intake face</td>
+            </tr>
+            <tr>
+              <td class="sm-source">HRSG — Casing and Duct<br><span style="font-size:10px;color:var(--text-lo)">Heat recovery steam generator shell, expansion joints</span></td>
+              <td class="sm-lw">100–106</td>
+              <td class="sm-freq">63–500 Hz</td>
+              <td><span class="sm-risk risk-med">MED</span></td>
+              <td><span class="sm-risk risk-med">MODERATE</span></td>
+              <td style="font-size:11px;color:var(--text-lo)">HRSG duct silencers; acoustic lagging on steam extraction pipe; casing acoustic panels</td>
+            </tr>
+            <tr>
+              <td class="sm-source">Cooling Tower Fans<br><span style="font-size:10px;color:var(--text-lo)">Mechanical draft towers, fan decks</span></td>
+              <td class="sm-lw">102–108</td>
+              <td class="sm-freq">125–1k Hz</td>
+              <td><span class="sm-risk risk-med">MED</span></td>
+              <td><span class="sm-risk risk-hi">CRITICAL</span></td>
+              <td style="font-size:11px;color:var(--text-lo)">CT enclosure; low-RPM variable speed fans; fan speed reduction 22:00–07:00 at residential boundaries</td>
+            </tr>
+            <tr>
+              <td class="sm-source">Cooling Tower — Water Splash<br><span style="font-size:10px;color:var(--text-lo)">Fill media, basin impact</span></td>
+              <td class="sm-lw">88–94</td>
+              <td class="sm-freq">500–2k Hz</td>
+              <td><span class="sm-risk risk-lo">LOW</span></td>
+              <td><span class="sm-risk risk-med">MODERATE</span></td>
+              <td style="font-size:11px;color:var(--text-lo)">Drift eliminators; acoustic fill media; basin enclosure</td>
+            </tr>
+            <tr>
+              <td class="sm-source">Linear Generator (LGen) Units<br><span style="font-size:10px;color:var(--text-lo)">Mainspring or equivalent linear reciprocating</span></td>
+              <td class="sm-lw">96–102</td>
+              <td class="sm-freq">60 Hz + harmonics</td>
+              <td><span class="sm-risk risk-hi">CRITICAL</span></td>
+              <td><span class="sm-risk risk-med">MODERATE</span></td>
+              <td style="font-size:11px;color:var(--text-lo)">Acoustic enclosure (10+ dB IL); vibration isolation mounts; commissioning tonal survey required</td>
+            </tr>
+            <tr>
+              <td class="sm-source">HV Transformers<br><span style="font-size:10px;color:var(--text-lo)">345 kV / 138 kV / 13.8 kV step-down</span></td>
+              <td class="sm-lw">90–98</td>
+              <td class="sm-freq">120 Hz (2nd harmonic)</td>
+              <td><span class="sm-risk risk-med">MED</span></td>
+              <td><span class="sm-risk risk-med">MODERATE</span></td>
+              <td style="font-size:11px;color:var(--text-lo)">Transformer sound wall on residential-facing sides; low-noise transformer spec (NEMA TR-1 Level 4)</td>
+            </tr>
+            <tr>
+              <td class="sm-source">Switchgear Cooling Fans<br><span style="font-size:10px;color:var(--text-lo)">MV/HV switchgear ventilation</span></td>
+              <td class="sm-lw">82–88</td>
+              <td class="sm-freq">Broadband</td>
+              <td><span class="sm-risk risk-lo">LOW</span></td>
+              <td><span class="sm-risk risk-lo">LOW</span></td>
+              <td style="font-size:11px;color:var(--text-lo)">Acoustic louvres on ventilation openings; fan speed control</td>
+            </tr>
+            <tr>
+              <td class="sm-source">Emergency Diesel Generators<br><span style="font-size:10px;color:var(--text-lo)">Backup power, test cycles</span></td>
+              <td class="sm-lw">105–112</td>
+              <td class="sm-freq">Broadband + combustion</td>
+              <td><span class="sm-risk risk-med">MED</span></td>
+              <td><span class="sm-risk risk-hi">HIGH</span></td>
+              <td style="font-size:11px;color:var(--text-lo)">Critical silencer (25 dB IL); test cycles restricted to 08:00–17:00 weekdays by CBA; acoustic enclosure</td>
+            </tr>
+            <tr>
+              <td class="sm-source">Industrial Wastewater Pumps<br><span style="font-size:10px;color:var(--text-lo)">NEORSD pretreatment, blowdown, RO systems</span></td>
+              <td class="sm-lw">82–90</td>
+              <td class="sm-freq">Broadband</td>
+              <td><span class="sm-risk risk-lo">LOW</span></td>
+              <td><span class="sm-risk risk-lo">LOW</span></td>
+              <td style="font-size:11px;color:var(--text-lo)">Below-grade or enclosed pump station; vibration isolation on all pipe connections</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 4. MITIGATION DESIGN -->
+    <section class="doc-section" id="mitigation">
+      <div class="section-eyebrow"><span class="section-num">§ 04</span>Mitigation Design</div>
+      <h2 class="doc-h2">Acoustic Mitigation Systems — Design Requirements</h2>
+      <div class="section-rule"></div>
+
+      <p class="doc-p">A compliant hyperscale data center acoustic design is a layered system — no single measure is sufficient. The following subsections address the three principal mitigation domains: generation equipment, cooling systems, and perimeter barriers. All design targets assume a worst-case receiving zone of Residential A/B with a nighttime limit of 50 dB(A).</p>
+
+      <div id="mitigation-generation">
+        <h3 class="doc-h3">Generation Equipment</h3>
+        <div class="mit-grid">
+          <div class="mit-card">
+            <div class="mit-card-head">
+              <div class="mit-icon" style="background:rgba(240,106,0,0.12);color:var(--orange)">🔥</div>
+              <div>
+                <div class="mit-card-title">Gas Turbine Exhaust Silencer</div>
+                <div class="mit-card-sub">GT · HRSG Duct · Stack</div>
+              </div>
+            </div>
+            <div class="mit-specs">
+              <div class="mit-spec-row"><span class="mit-spec-key">Required insertion loss (residential boundary)</span><span class="mit-spec-val">18–22 dB IL</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Silencer type</span><span class="mit-spec-val">Reactive + dissipative hybrid</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Target fence-line Lw after silencer</span><span class="mit-spec-val">≤ 80 dB(A) at 1 m</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Back-pressure constraint</span><span class="mit-spec-val">&lt; 1.5 in. w.g. per OEM</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Tonal attenuation (blade-pass)</span><span class="mit-spec-val">≥ 10 dB at fundamental</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Stack height (minimum)</span><span class="mit-spec-val">Per dispersion model + §551</span></div>
+            </div>
+          </div>
+          <div class="mit-card">
+            <div class="mit-card-head">
+              <div class="mit-icon" style="background:rgba(240,106,0,0.10);color:var(--orange-dim)">🌬️</div>
+              <div>
+                <div class="mit-card-title">Gas Turbine Inlet Silencer</div>
+                <div class="mit-card-sub">GT · Intake Filter House</div>
+              </div>
+            </div>
+            <div class="mit-specs">
+              <div class="mit-spec-row"><span class="mit-spec-key">Required insertion loss</span><span class="mit-spec-val">12–16 dB IL</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Silencer type</span><span class="mit-spec-val">Splitter / parallel baffle</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Intake face orientation</span><span class="mit-spec-val">Away from residential boundary</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Screen wall on residential side</span><span class="mit-spec-val">Required — min. 8 ft above intake</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Pressure drop constraint</span><span class="mit-spec-val">&lt; 4 in. w.g. total filter+silencer</span></div>
+            </div>
+          </div>
+          <div class="mit-card">
+            <div class="mit-card-head">
+              <div class="mit-icon" style="background:rgba(110,122,153,0.15);color:var(--steel)">⚡</div>
+              <div>
+                <div class="mit-card-title">Linear Generator Acoustic Enclosure</div>
+                <div class="mit-card-sub">LGen · Mainspring / Reciprocating</div>
+              </div>
+            </div>
+            <div class="mit-specs">
+              <div class="mit-spec-row"><span class="mit-spec-key">Required insertion loss (tonal)</span><span class="mit-spec-val">≥ 10 dB(A)</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">60 Hz attenuation</span><span class="mit-spec-val">≥ 15 dB (tonal penalty prevention)</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Enclosure construction</span><span class="mit-spec-val">Mass-spring-mass composite panels</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Vibration isolation mounts</span><span class="mit-spec-val">Required — all LGen footings</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Commissioning tonal survey</span><span class="mit-spec-val">Required — 1/3-octave at fence line</span></div>
+            </div>
+          </div>
+          <div class="mit-card">
+            <div class="mit-card-head">
+              <div class="mit-icon" style="background:rgba(110,122,153,0.12);color:var(--steel)">🔌</div>
+              <div>
+                <div class="mit-card-title">HV Transformer Sound Walls</div>
+                <div class="mit-card-sub">Transformers · Switchgear</div>
+              </div>
+            </div>
+            <div class="mit-specs">
+              <div class="mit-spec-row"><span class="mit-spec-key">Wall insertion loss required</span><span class="mit-spec-val">8–12 dB IL</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">120 Hz attenuation</span><span class="mit-spec-val">Priority — transformer hum</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Transformer spec</span><span class="mit-spec-val">NEMA TR-1 Level 4 (low-noise)</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Fan-less cooling preference</span><span class="mit-spec-val">ONAN or ONAF with acoustic screens</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Wall height (residential side)</span><span class="mit-spec-val">1.5× transformer height minimum</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="mitigation-cooling">
+        <h3 class="doc-h3">Cooling Systems</h3>
+        <div class="mit-grid">
+          <div class="mit-card">
+            <div class="mit-card-head">
+              <div class="mit-icon" style="background:rgba(0,180,200,0.12);color:var(--teal)">🌊</div>
+              <div>
+                <div class="mit-card-title">Cooling Tower Acoustic Enclosure</div>
+                <div class="mit-card-sub">Mechanical Draft Towers</div>
+              </div>
+            </div>
+            <div class="mit-specs">
+              <div class="mit-spec-row"><span class="mit-spec-key">Required insertion loss (fan noise)</span><span class="mit-spec-val">10–14 dB IL</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Fan type specification</span><span class="mit-spec-val">Low-noise fans, ≤ 3,000 rpm max</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Variable speed drives (VSD)</span><span class="mit-spec-val">Required — all fans on residential boundary</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Nighttime fan speed limit</span><span class="mit-spec-val">≤ 60% RPM after 22:00 (S1/W1 boundaries)</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Drift eliminator specification</span><span class="mit-spec-val">≥ 99.995% efficiency; acoustic fill media</span></div>
+            </div>
+          </div>
+          <div class="mit-card">
+            <div class="mit-card-head">
+              <div class="mit-icon" style="background:rgba(0,180,200,0.10);color:var(--teal-dim)">❄️</div>
+              <div>
+                <div class="mit-card-title">Absorption Chiller / Dry Cooler</div>
+                <div class="mit-card-sub">LiBr Double-Effect / Closed-Loop</div>
+              </div>
+            </div>
+            <div class="mit-specs">
+              <div class="mit-spec-row"><span class="mit-spec-key">Chiller acoustic spec</span><span class="mit-spec-val">≤ 85 dB(A) at 1 m (shell radiated)</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Solution pump isolation</span><span class="mit-spec-val">Vibration isolators on all connections</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Dry cooler fan noise (if applicable)</span><span class="mit-spec-val">Same VSD and enclosure requirements as CT</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Refrigerant/steam valve noise</span><span class="mit-spec-val">Trim valve silencers on high-pressure letdown</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="mitigation-perimeter">
+        <h3 class="doc-h3">Perimeter Noise Barriers</h3>
+        <p class="doc-p">Perimeter barriers serve as the final layer of attenuation, catching noise that has passed through or around the primary source-level mitigations. Barrier design must be coordinated with the acoustic model — a barrier that is too short, too narrow, or improperly located can provide as little as 3–5 dB insertion loss rather than the 10–15 dB achievable with a properly dimensioned wall.</p>
+
+        <div class="mit-grid">
+          <div class="mit-card">
+            <div class="mit-card-head">
+              <div class="mit-icon" style="background:rgba(45,202,114,0.10);color:var(--green)">🧱</div>
+              <div>
+                <div class="mit-card-title">Concrete Noise Barrier — Residential Boundaries</div>
+                <div class="mit-card-sub">North / West / South-Res Fence Lines</div>
+              </div>
+            </div>
+            <div class="mit-specs">
+              <div class="mit-spec-row"><span class="mit-spec-key">Construction</span><span class="mit-spec-val">Precast concrete or CMU, 20 lb/ft² min</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Minimum height (above grade)</span><span class="mit-spec-val">Per acoustic model; typically 12–20 ft</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Target insertion loss</span><span class="mit-spec-val">10–15 dB IL</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Absorptive treatment (source face)</span><span class="mit-spec-val">Required where reflections reach other receptors</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">No gaps at grade or abutments</span><span class="mit-spec-val">Critical — any gap reduces IL to &lt;5 dB</span></div>
+            </div>
+          </div>
+          <div class="mit-card">
+            <div class="mit-card-head">
+              <div class="mit-icon" style="background:rgba(45,202,114,0.08);color:var(--green)">🛡️</div>
+              <div>
+                <div class="mit-card-title">Acoustic Panel System — Industrial Boundaries</div>
+                <div class="mit-card-sub">East / South-Industrial Fence Lines</div>
+              </div>
+            </div>
+            <div class="mit-specs">
+              <div class="mit-spec-row"><span class="mit-spec-key">Construction</span><span class="mit-spec-val">Steel-faced acoustic panel; 8–12 ft height</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Target insertion loss</span><span class="mit-spec-val">6–10 dB IL (limits are less restrictive)</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Primary purpose</span><span class="mit-spec-val">Community relations; future zoning change protection</span></div>
+              <div class="mit-spec-row"><span class="mit-spec-key">Low-frequency attenuation</span><span class="mit-spec-val">Mass-loaded vinyl core where GT is facing</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <div class="callout-icon">⚠</div>
+          <div class="callout-body">
+            <div class="callout-title">Barrier Modeling Requirement</div>
+            <div class="callout-text">All perimeter barriers must be sized using a validated acoustic propagation model (ISO 9613-2, FHWA TNM, or equivalent). Barrier heights and lengths derived from rule-of-thumb tables are insufficient for the source complexity of a hyperscale campus. A full 3D model incorporating building shielding, ground absorption, and atmospheric effects is required as part of the air permit application and community benefit agreement technical annexes.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. MONITORING -->
+    <section class="doc-section" id="monitoring">
+      <div class="section-eyebrow"><span class="section-num">§ 05</span>Fence Line Monitoring</div>
+      <h2 class="doc-h2">Monitoring Point Placement and Operational Requirements</h2>
+      <div class="section-rule"></div>
+
+      <div id="monitoring-placement">
+        <h3 class="doc-h3">Monitor Point Placement Criteria</h3>
+        <p class="doc-p">Fence-line monitoring points must be placed to capture the worst-case noise impact at each distinct receiving-zone boundary. A minimum of one point per distinct zoning boundary segment is required; additional points are required wherever a dominant noise source (GT exhaust axis, cooling tower cluster face) is within 150 meters of a residential boundary.</p>
+
+        <table class="mon-table">
+          <thead>
+            <tr>
+              <th>Boundary Segment</th>
+              <th>Minimum Points</th>
+              <th>Placement Logic</th>
+              <th>Priority Sources</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mon-req">Residential (A/B) boundary</td>
+              <td style="font-family:var(--mono);font-weight:700;color:var(--orange)">1 per 200 m</td>
+              <td style="font-size:11px;color:var(--text-lo)">On fence line at property line; at midpoint of each residential-facing segment; additional at GT exhaust axis projection</td>
+              <td style="font-size:11px;color:var(--text-lo)">GT exhaust, CT fans, LGen tonal</td>
+            </tr>
+            <tr>
+              <td class="mon-req">Multi-family (C) boundary</td>
+              <td style="font-family:var(--mono);font-weight:700;color:var(--yellow)">1 per 300 m</td>
+              <td style="font-size:11px;color:var(--text-lo)">On fence line; additional at HRSG stack axis projection if within 300 m</td>
+              <td style="font-size:11px;color:var(--text-lo)">HRSG, CT fans</td>
+            </tr>
+            <tr>
+              <td class="mon-req">Commercial (E) boundary</td>
+              <td style="font-family:var(--mono);font-weight:700;color:var(--text-mid)">1 per 400 m</td>
+              <td style="font-size:11px;color:var(--text-lo)">At midpoint of commercial-facing segment; GT intake axis if applicable</td>
+              <td style="font-size:11px;color:var(--text-lo)">GT intake, transformer</td>
+            </tr>
+            <tr>
+              <td class="mon-req">Industrial (F) boundary</td>
+              <td style="font-family:var(--mono);font-weight:700;color:var(--text-lo)">1 per 500 m</td>
+              <td style="font-size:11px;color:var(--text-lo)">Minimum 1 per distinct industrial segment; primarily for baseline documentation and CBA compliance</td>
+              <td style="font-size:11px;color:var(--text-lo)">GT exhaust (secondary)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="monitoring-requirements">
+        <h3 class="doc-h3">Operational Monitoring Requirements</h3>
+        <table class="mon-table">
+          <thead>
+            <tr><th>Requirement</th><th>Standard</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mon-req">Instrument Class</td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--teal)">Class 1 (IEC 61672)</td>
+              <td style="font-size:11px;color:var(--text-lo)">Required at all residential boundary points; Class 2 acceptable at industrial boundaries</td>
+            </tr>
+            <tr>
+              <td class="mon-req">Metrics logged</td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--teal)">Leq, Lmax, L90, 1/3-oct</td>
+              <td style="font-size:11px;color:var(--text-lo)">1-minute intervals; 24-hour rolling Leq for Title V reporting</td>
+            </tr>
+            <tr>
+              <td class="mon-req">Meteorological co-logging</td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--teal)">Required</td>
+              <td style="font-size:11px;color:var(--text-lo)">Wind speed/direction, temperature, RH, precipitation flag at each valid measurement event per §551.02(d)</td>
+            </tr>
+            <tr>
+              <td class="mon-req">Exceedance alert response time</td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--teal)">&lt; 5 minutes</td>
+              <td style="font-size:11px;color:var(--text-lo)">SMS/email to acoustic engineer and facility manager; DCS alert to GT/CT operators for load adjustment</td>
+            </tr>
+            <tr>
+              <td class="mon-req">Data retention</td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--teal)">5 years minimum</td>
+              <td style="font-size:11px;color:var(--text-lo)">Per Ohio EPA Title V and Cleveland §551 enforcement requirements; 90-day local buffer minimum</td>
+            </tr>
+            <tr>
+              <td class="mon-req">Calibration frequency</td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--teal)">Before/after each campaign + annual</td>
+              <td style="font-size:11px;color:var(--text-lo)">Field calibration before and after each discrete measurement campaign; annual A2LA-accredited lab certification for portable instruments</td>
+            </tr>
+            <tr>
+              <td class="mon-req">Commissioning baseline survey</td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--teal)">Required — all 6 points</td>
+              <td style="font-size:11px;color:var(--text-lo)">Full 1/3-octave spectra at all fence-line points during: (a) pre-construction ambient, (b) first fire/commissioning, (c) 30-day operational baseline. Tonal penalty assessment mandatory at LGen and GT boundary points.</td>
+            </tr>
+            <tr>
+              <td class="mon-req">Annual compliance report</td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--teal)">Required</td>
+              <td style="font-size:11px;color:var(--text-lo)">Submitted to Cleveland APCD and Community Benefits Agreement monitor; includes all exceedance events, corrective actions taken, and rolling 12-month Leq by point</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 6. EQUIPMENT -->
+    <section class="doc-section" id="equipment">
+      <div class="section-eyebrow"><span class="section-num">§ 06</span>Supporting Equipment</div>
+      <h2 class="doc-h2">Monitoring Equipment Procurement Specification</h2>
+      <div class="section-rule"></div>
+
+      <p class="doc-p">The following table provides a complete equipment procurement reference for a six-point fence-line monitoring program at a hyperscale data center campus. Costs are 2025–2026 Class 4 estimates. All monitoring equipment is separate from and in addition to the acoustic mitigation package costs.</p>
+
+      <table class="equip-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Equipment</th>
+            <th>Specification / Model Reference</th>
+            <th>Qty</th>
+            <th>Installed Cost Range</th>
+            <th>Annual O&amp;M</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:700;color:var(--teal);font-family:var(--mono);font-size:10px">CAT 1</td>
+            <td class="equip-name">Permanent Outdoor SLM Stations</td>
+            <td style="font-size:11px;color:var(--text-lo)">Brüel &amp; Kjær Type 2250/2270 or equiv. Class 1 IEC 61672; IP55 housing; GPS timestamp; cellular + fiber backhaul; Leq/Lmax/L90/1/3-oct continuous; 90-day local storage</td>
+            <td style="font-family:var(--mono);font-weight:700">6</td>
+            <td class="equip-cost">$60,000 – $85,000</td>
+            <td class="equip-annual">$6,000 – $9,000</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;color:var(--orange);font-family:var(--mono);font-size:10px">CAT 2</td>
+            <td class="equip-name">Portable Type 1 Field SLMs</td>
+            <td style="font-size:11px;color:var(--text-lo)">B&amp;K 2250-L, Larson Davis LxT, Pulsar Nova — ANSI S1.4 Type 1; A/C/Z weighted; 1/3-oct real-time; data logging and Bluetooth transfer. 1 site office resident; 2 for acoustic engineer field use.</td>
+            <td style="font-family:var(--mono);font-weight:700">3</td>
+            <td class="equip-cost">$24,000 – $42,000</td>
+            <td class="equip-annual">$3,000 – $5,000</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;color:var(--yellow);font-family:var(--mono);font-size:10px">CAT 3</td>
+            <td class="equip-name">Meteorological Station</td>
+            <td style="font-size:11px;color:var(--text-lo)">Campbell Scientific CR1000X datalogger; 2D ultrasonic anemometer ×2 at 10 m AGL (east parcel + residential corner); Vaisala HMP series T/RH; tipping-bucket rain gauge; barometric pressure. Auto-annotates SLM readings with met conditions per §551.02(d).</td>
+            <td style="font-family:var(--mono);font-weight:700">2 stn</td>
+            <td class="equip-cost">$15,000 – $22,000</td>
+            <td class="equip-annual">$1,500 – $2,500</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;color:var(--red);font-family:var(--mono);font-size:10px">CAT 4</td>
+            <td class="equip-name">Vibration / Structure-Borne Instrumentation</td>
+            <td style="font-size:11px;color:var(--text-lo)">PCB Piezotronics 393B04 triaxial accelerometers — LGen foundations and building slab (10–250 Hz, tonal penalty assessment) ×4 per LGen building. Geophone string at GT foundation for property-line ground vibration per ISO 10816-3. Accelerometers on first 3 HRSG/LP Economizer pipe supports for isolation hanger performance verification.</td>
+            <td style="font-family:var(--mono);font-weight:700">Suite</td>
+            <td class="equip-cost">$40,000 – $65,000</td>
+            <td class="equip-annual">$3,000 – $5,000</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;color:var(--teal);font-family:var(--mono);font-size:10px">CAT 5</td>
+            <td class="equip-name">Data Infrastructure, RTUs &amp; Backhaul</td>
+            <td style="font-size:11px;color:var(--text-lo)">Field RTU at each SLM station; 4G LTE backup + primary fiber; 90-day local buffer. DCS integration for GT load state + CT fan speed correlation. Exceedance SMS/email notification within 5 minutes. Noise monitoring software platform (NorSonic Noise Sentinel / 01dB WINGS / Cirrus Optimus Green Cloud) — §551 and Title V reporting format, rolling 24h Leq, auto-flag.</td>
+            <td style="font-family:var(--mono);font-weight:700">System</td>
+            <td class="equip-cost">$25,000 – $40,000</td>
+            <td class="equip-annual">$8,000 – $15,000</td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;color:var(--steel);font-family:var(--mono);font-size:10px">CAT 6</td>
+            <td class="equip-name">Calibration Equipment &amp; Consumables</td>
+            <td style="font-size:11px;color:var(--text-lo)">B&amp;K 4231 acoustic calibrator (94 dB / 1 kHz) ×3 (one per field kit). B&amp;K 4228 pistonphone (250 Hz / 124 dB) — reference standard for enforcement-context measurements. Annual A2LA-accredited lab certification (Intertek / NTS / B&amp;K). 90 mm foam windscreens; ground board baffles for street-adjacent points; quarterly desiccant cartridge replacement; spare housing gaskets.</td>
+            <td style="font-family:var(--mono);font-weight:700">Kit</td>
+            <td class="equip-cost">$8,000 – $14,000</td>
+            <td class="equip-annual">$3,000 – $5,000</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" style="font-size:12px">Total Monitoring Program (Installed, Year 1)</td>
+            <td class="equip-cost" style="font-size:15px">$172,000 – $268,000</td>
+            <td class="equip-annual" style="font-size:13px">$24,500 – $41,500 / yr</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="callout info">
+        <div class="callout-icon">ℹ</div>
+        <div class="callout-body">
+          <div class="callout-title">Relationship to Acoustic Mitigation Package</div>
+          <div class="callout-text">The monitoring program represents approximately 1–2% of a typical hyperscale acoustic mitigation package ($10–18M Class 4). It is the verification layer — it proves the mitigation is performing. Monitoring program costs should be included in the Community Benefits Agreement as a separate line item and maintained as a long-term facility operating expense, not a one-time capital cost.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. PHASING -->
+    <section class="doc-section" id="phasing">
+      <div class="section-eyebrow"><span class="section-num">§ 07</span>Implementation Phasing</div>
+      <h2 class="doc-h2">Acoustic Compliance Program — Phased Implementation</h2>
+      <div class="section-rule"></div>
+
+      <div class="phase-list">
+        <div class="phase-item">
+          <div class="phase-dot p1">01</div>
+          <div class="phase-body">
+            <div class="phase-tag">Pre-Construction · 12–18 Months Before First Fire</div>
+            <div class="phase-title">Baseline Survey, Acoustic Modeling, and Permit Submittals</div>
+            <div class="phase-desc">Establish the pre-construction ambient noise environment at all six fence-line monitoring points. Commission the 3D acoustic propagation model and use it to size all mitigation systems. Complete §551 and Title V noise impact analyses for air permit application.</div>
+            <ul class="phase-items">
+              <li>Pre-construction ambient survey — minimum 72-hour continuous at each residential boundary point</li>
+              <li>3D acoustic model completed and peer-reviewed (ISO 9613-2 or FHWA TNM)</li>
+              <li>Mitigation system sizing finalized and incorporated into design documents</li>
+              <li>Title V noise impact analysis submitted to Ohio EPA</li>
+              <li>§551 compliance demonstration submitted to Cleveland Building & Housing</li>
+              <li>CBA technical annex noise provisions negotiated and executed</li>
+            </ul>
+          </div>
+        </div>
+        <div class="phase-item">
+          <div class="phase-dot p2">02</div>
+          <div class="phase-body">
+            <div class="phase-tag">Construction Phase · 6–12 Months Before First Fire</div>
+            <div class="phase-title">Monitoring Infrastructure Installation and Equipment Procurement</div>
+            <div class="phase-desc">Install permanent monitoring stations, meteorological equipment, and data infrastructure while construction is underway. Verify instrument placement against the acoustic model before concrete barriers are complete.</div>
+            <ul class="phase-items">
+              <li>Procure and install 6× permanent outdoor SLM stations on fence line</li>
+              <li>Install meteorological stations and commission datalogger integration</li>
+              <li>Install vibration/accelerometer instrumentation on LGen foundations and GT area</li>
+              <li>Commission data backhaul to DCS and noise monitoring software platform</li>
+              <li>Verify SLM placement against model — adjust if shielding or ground reflections differ from model assumptions</li>
+              <li>Deliver 3× portable Type 1 SLMs to acoustic engineer team</li>
+            </ul>
+          </div>
+        </div>
+        <div class="phase-item">
+          <div class="phase-dot p3">03</div>
+          <div class="phase-body">
+            <div class="phase-tag">Commissioning · First 30 Days of Operation</div>
+            <div class="phase-title">Commissioning Acoustic Survey and Tonal Assessment</div>
+            <div class="phase-desc">The most critical acoustic milestone. All mitigation systems must be verified performing as designed during actual plant operation before commercial operation date (COD). This is the only opportunity to identify design shortfalls before the facility is occupied and neighbors have legal standing to complain.</div>
+            <ul class="phase-items">
+              <li>First fire + load ramp: continuous monitoring active at all 6 points from first startup</li>
+              <li>1/3-octave spectra captured at all residential boundary points during: startup, 25%, 50%, 75%, and 100% load</li>
+              <li>Tonal penalty assessment at LGen and GT boundary points — confirm no tonal prominences ≥ 5 dB above adjacent 1/3-oct bands</li>
+              <li>CT fan speed reduction verification after 22:00 — confirm residential boundary readings comply with nighttime limits at full cooling load</li>
+              <li>Mitigation shortfall identification and corrective action plan issued within 14 days of commissioning survey</li>
+              <li>30-day operational baseline report submitted to CBA monitor and Cleveland APCD</li>
+            </ul>
+          </div>
+        </div>
+        <div class="phase-item">
+          <div class="phase-dot p4">04</div>
+          <div class="phase-body">
+            <div class="phase-tag">Operations · Ongoing Annual Cycle</div>
+            <div class="phase-title">Continuous Monitoring, Annual Reporting, and Adaptive Management</div>
+            <div class="phase-desc">Ongoing monitoring feeds both regulatory reporting and operational management. The DCS integration enables real-time noise-aware load control — the facility can reduce CT fan speed or defer LGen starts during sensitive nighttime hours without manual intervention.</div>
+            <ul class="phase-items">
+              <li>Continuous monitoring at all 6 points; rolling 24h Leq logged and auto-compared to §551 limits</li>
+              <li>Exceedance events: automated alert within 5 minutes; root cause analysis and corrective action within 48 hours</li>
+              <li>Annual compliance report submitted to Cleveland APCD and CBA monitor — rolling 12-month Leq by point, all exceedance events, and corrective actions</li>
+              <li>Annual field calibration verification; A2LA lab certification for portable instruments</li>
+              <li>5-year acoustic performance review — repeat commissioning-level survey to verify no degradation in mitigation system performance</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. COST SUMMARY -->
+    <section class="doc-section" id="costs">
+      <div class="section-eyebrow"><span class="section-num">§ 08</span>Cost Summary</div>
+      <h2 class="doc-h2">Acoustic Compliance Program — Class 4 Cost Estimate</h2>
+      <div class="section-rule"></div>
+
+      <p class="doc-p">The following cost summary covers the complete acoustic compliance program for a hyperscale data center in Cleveland at a site adjacent to residential zoning. Costs are Class 4 estimates (±30%) based on 2025–2026 equipment and construction pricing. The mitigation package is sized for a GE Vernova 7HA class gas turbine with HRSG, large-tonnage cooling towers, and a linear generator yard.</p>
+
+      <div class="cost-grid">
+        <div class="cost-card">
+          <div class="cost-label">GT Exhaust &amp; Inlet Silencing</div>
+          <div class="cost-val">$3.5M – $5.2M</div>
+          <div class="cost-note">Exhaust silencer + stack; inlet silencer; west-facing screen wall; GT tonal survey</div>
+        </div>
+        <div class="cost-card">
+          <div class="cost-label">HRSG / Steam System Acoustics</div>
+          <div class="cost-val">$1.8M – $2.6M</div>
+          <div class="cost-note">HRSG duct silencers; acoustic lagging on steam extraction lines; LP economizer pipe isolation</div>
+        </div>
+        <div class="cost-card">
+          <div class="cost-label">Cooling Tower Enclosure &amp; Fan Control</div>
+          <div class="cost-val">$2.2M – $3.4M</div>
+          <div class="cost-note">CT enclosure; VSD on all fans; low-noise fan retrofit if required; nighttime speed control integration</div>
+        </div>
+        <div class="cost-card">
+          <div class="cost-label">LGen Acoustic Enclosures</div>
+          <div class="cost-val">$1.4M – $2.1M</div>
+          <div class="cost-note">Acoustic building enclosure; vibration isolation on all footings; commissioning tonal survey</div>
+        </div>
+        <div class="cost-card">
+          <div class="cost-label">HV Transformer / Switchgear Walls</div>
+          <div class="cost-val">$0.8M – $1.4M</div>
+          <div class="cost-note">Transformer sound walls on residential-facing sides; low-noise transformer specification premium; acoustic louvres</div>
+        </div>
+        <div class="cost-card">
+          <div class="cost-label">Perimeter Concrete Noise Barriers</div>
+          <div class="cost-val">$2.0M – $3.2M</div>
+          <div class="cost-note">Precast concrete barrier — north and west residential boundaries; acoustic panel system on industrial boundaries</div>
+        </div>
+        <div class="cost-card total-card">
+          <div>
+            <div class="cost-label">Total Acoustic Mitigation Package (Class 4)</div>
+            <div class="cost-val orange">$11.7M – $17.9M</div>
+            <div class="cost-note">Excludes monitoring program. As % of total hyperscale campus cost: approximately 0.5–0.9%. Monitoring program adds $190K–$296K installed + $24K–$42K/yr O&amp;M.</div>
+          </div>
+          <div style="text-align:right">
+            <div class="cost-label">Monitoring Program</div>
+            <div class="cost-val teal" style="font-size:20px">$190K – $296K</div>
+            <div class="cost-note" style="text-align:right">Installed · 6 points</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout orange">
+        <div class="callout-icon">📋</div>
+        <div class="callout-body">
+          <div class="callout-title">City of Cleveland Review Requirements — Acoustic Submittals</div>
+          <div class="callout-text">Projects subject to this framework must submit the following to the Cleveland Department of Building and Housing and the Office of Sustainability prior to issuance of building permits: (1) Pre-construction ambient noise survey report; (2) Validated 3D acoustic propagation model with all source inputs and mitigation assumptions documented; (3) §551 compliance demonstration for each fence-line point and each receiving zone; (4) Mitigation design specifications including silencer insertion loss certifications and barrier design drawings; (5) Fence-line monitoring plan identifying point locations, instrumentation, and data management protocol; (6) Community Benefits Agreement noise annex incorporating the operational monitoring commitments. Post-construction: commissioning acoustic survey report within 60 days of first commercial operation date.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- FOOTER -->
+<footer class="doc-footer">
+  <div class="footer-left">
+    <div class="footer-doc-title">Noise Abatement for Hyperscale Data Centers — City of Cleveland Technical Guidance</div>
+    <div class="footer-doc-meta">Revision 1.0 · June 2026 · Cleveland Codified Ordinance §551 · Ohio EPA Title V · ANSI S1.4 / IEC 61672</div>
+  </div>
+  <div class="footer-disclaimer">
+    This document is prepared by The FixOurStreets216 Project as a technical guidance framework for municipal review and developer pre-application use. It does not constitute legal advice or a formal regulatory determination. All cost estimates are Class 4 (±30%). Applicants should engage a licensed acoustic engineer for project-specific analysis.
+  </div>
+  <div class="footer-fos-row">
+    <img class="logomark" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACfCAYAAAB+49JVAAA42UlEQVR42u2df3xT9b3/X0matE2BnAA1CEhPmGu7Oy9N2V3jFO0PL3QTR3848A4cgbLOr3htR7mgX/hStHxhE2aVesWHVoplyq64lRZ/Vrb+QJy3fB+Xply3UXalqVNHLJAT6I/8avr94/R8epKcJCe/Sqp8Hg8elJImpznPvN4/P++PRCaTjWGS1vSUJJ/vJSRIY/qaCoUiCs8hC+vnHI7RiF/b4XDE9P1xudw+37s2ZJssJFySWAMoBF2swYsUukDAKeTywMA4nTEDMpYwCoE4CTDGFsCpBB8fumCQhQ0QD85IYIwViNcBwtgA6A1evJrZyYAuljBOtnmOAYjRB3Ay4QsHvFChkyuSIrpGp8MWcxgn0zRHGcLoATiZAUYo4An5c8HAE4JOIZeEoG5jYcEo5D+GAuRkmuYogRg5gHzw4sXURgM6PnAKeXgm3uF0+IUyljBOpmmOEMTwAYxHUxsqeKFCJ1MoRV/zqGM4KjDGK4hRMs3RAfB6w+cNXihqFwg6DrjEBPYtUiQmirvxdjsAwO6SCMLIB5IPY6iqKAbEyVLDSQOQAy/eoAsXvEDQCQEnTUhBklw4XWFzSuF2DQkC6Q/GyQJxshQxRBBDA3B6SlJcgifW1PqDjgNPSOk44BQK3vfkSiTKPd82u1MCt3OYd7PtPkDylTEaqhiueY41iCFAKA7AWKterBVPDHjeaqdMTvaBbsY09t+SBCVU0xIhTUgGALhdI7AO2jHmYqGy220YGR4JCqNYEGMVsMQ6ahYBYmAAY+nnTUZEq5BLIlI7PnTKZCUUiSx0FKWGJlUN84AFAKBJVYOxWmH+8jLcrhE47HYMj7BgXR20E2UMVRUnSxFjBaMIEP0DeL3hi4Xi+QPPW+2SlclITEzyULppKQqoVDMxO3UOrFYGHR3tOPrGMQDAsqUFKC4uhkpF4dLARVitVzA45PBQRiFVHB4ZiSsQrwOEwgDG0uQGg28yFY8PHufXCYE3O3UuVCoKtuGraD3xB3R2tMM8wPi8zo+KC1GwdDk0N82C+cvLuDTwhSCIfH/RG8RomudwQJxkCH0BjIXyxULxvCNasf6dkJkNBN78eRoMfDkQEDzvtWplCfLy8jF/ngaffW4Gw1hhG7ZgeDh083y9QIw2jH4gZAGMZVI52ooXbmAhxr9TKpORIJ8A78oVC955t1U0eIFAHPhyAOYBy5QDMRYQ8pLXvgBOluqFa2pjBV6SUg2KUnmAx/l4/KVJpUKGcbJBjEXUHC0Qvcp4ngBGCl+4ke31VLwkJRvRpt6UGhA8Dr7fHXsLJzvbsW37jpgpIj9gcTjY4MQ7YImFIk6WWeaZY5eEmpEyNlnwRRs8pTI5aCqFi2j54M1QqZAgTxENHgCUl5dBTVEwmfqg0y3G4caDWJSVHfBnxIB45YoFX/x9AC7nEK5arSGDCADDwyNTDsTxhDULYCTwxapWGyp4yuTx70URPE0qhSzdYuTl5QMAGMaCzs52LMrKRl5uHnp6jNi7rzbs9+5HxYX4wb0/JNcSaxDjrdbscrnDBzAccxtpOmUywFu2tADvn2gjKsUwVgKf0WiEwbAOVZsqoFZTOHfeFBW/KBCI3Gt7gxgol+gPxHDyiLFMZIcFYLT9PDHplFiDl5lOY61hAxjGAopSE6WrqNiEqk0VMA8wKC8vQ7ZOh8bGQ+g63Y1YrFUrS1C49J6YgRhKQnsyGh5CBjCaqhcL8ChKDQAhKd6e3btAUSp0G43Q0lq0tDShqKgUhxsPAgBebngVm6sejTp0q1aWEF8SgIeacgltIR9xshUxlmrocrldsmkpSU/EAj6FXA6ZTCYInkyWQMBLTkr0eZxMoURyYgIUiYmQJSQQ8ORyORSKRMhkCUhWJmPatOlISEgARamRlJSMGSoVUqbPwvz585CWNh92uwO/a2rByy+/jNP/zyh4vYODDHS6bNw8Zw4uXryIo28cw+ef9eHlhldhYRgcbzmGkx98FFX4ysvL8NBDj8BqtWDlA2vQ1fUR1qxejcuX/o5Llxn8+dwnePudd+G0XcP8Bd9AesY/QJ4ghcstg1wuhUQiQVJSMlwuF5KSkyGRSuByuiCTJSApKQlSqQROlwuyhATIEhIglUogl8vhdLom3mOZDAp5AgA3Rt2ATJYAmSwB7lGX572QySCTyTDqdkMmk0Imk2J0NHD/ikwmw+hocFilUolbMnvm9LFowBeK6gWr1Yqp0wqZ2rk3p2LmTDWpXPgLLjLTaagoNVE1fU42DIb1aG5uRo/xDACA1mqDql55eRkAoL6+QTR8mek0flX77/i0/wLuzi3A/v21ON7chIOHXkVLSxMA4Hhzk0eukVPEBWkLcenLzyJSRDG15mipoQgldAUEMBzViyZ4Yk3t3JtTMfum+TB/YRIELzOdxl25Baivb8CypQUkquXn8l579TD6+/ux/9mngyaaV60sQUXlZuj1egBAb28v9u+vFQViZjoNAFhRVAqTqQ9H3ziGVStLQNNaUJQai7Ky0dLSBC2t9bmWeAMxCiZZGMCpBN7Mmeqg6RR9TjYONvwaVZsqQFEq6HSL0WfqQ7ZOh42PVBAwgkW13uB5r1BA5K/XXj0MAOjpMcLCMNDSWjCMBcdbmgSvKRwQQ0loxwJEPxC6ZMrkxCeEbHgk8HF+nkIugUzGBhj85+R8vATpRIAhTUhh/b4QfLyRERt+19SC3b/4Ff7053N+c3mGdRvw4osvoLi4GI2vHEJm5rdgs9mQnJSMP7S1AwAuXWYCgvf60d/iZw89jPnz5/t93OzZs7F8+Q/xwAMPwOm04cwZcYHLP9+Tj23/eyuKi0ug19+B11//DRKTkqDTZSMlJRmfXOjDsqUFGLxmwdCwjfiIlwYu4hu3fhO3fiMNCkVSQB9xzD0GmYznD477iIkKGaRSCdwSBcZGnR5+H+CGTCYBJIH9Q0jGwvULPX3AUHw9f+DxI1tv1RNTMhPj44mtXGhprYfSrVpZgrWGDWhpaUK/yYT3T7RFpHjBVqiKeOD5OtTtr8WirGxyndk6HbqNRqgpCjRNo9to9Hk+rh8xlKhZbK1ZbOomTDWcMMHRgu96gpeZTsNiYZCblw8VpUZ9fQMOPF8Hk8kEmqZhMpnQ2dkeNLiIFLxIQdy6pQomUx9oWssGJePBSUVlFbqNRuTl5qGx8RX0GM94+IiTCWKUIGQBjAS+QPk8oUZQMU0CoUa1HDScI8/6iyrU7a9FRWUV6vbXiqpalJeXwWAoixp4kYC4amUJAJDfmVNHFaWGSqVGRWUVNqx/UDBg4kAM1UfkgxgomR1IDUOEUByAweATq3reHcjhgrdsaQEoSoXOjnasKC7F8eYm7HyihoD22quH0dj4CnQ6nSjFizV4kYCoSaWw84kaACAB09YtVaRi4y9QCQXEQG1g4ZhlsRCKAlChkIWlepGA99nnZo89F0JvrMGwjuzN0OkWo6WlCQbDephM7M0Q0yQw2eBFAqI+Jxumvj5U/nwzSSHt2b0LLS1NsDIWLEhb6NenDQRioH7EYBGzGDUMBKHD4WCjYH9RbzD4piknqhhcZKtM9qxepKRMY6MvuRIq1TQkKhKgTFYiZdo0qGfN8ohqL1+5iuNvvoW9+54RjGoz02mUlJYiPy8Pra3vgqJmou65A1j4DS0eeODH2Ld3Dy6aLwZtkSovL8Phw7+GwbAuYFQb6xVK1Pz55xcxNGzDd76TjXPn/oI77rwD3EyH3b/4FaxWC/7h29/CmTPd2LN7F2QyCT650AcA+ORCn9+oOSlZAYlEAqlECql0DEnJyXCMSiGVjPlUVbwjZqFqCj9SDhYhj46OuiVz58waCxW+YKonTUjBjBS5X8XjGkHFKh4/eZuVpUNd3TMw9fVhRXEpccitVosoU1tZWYWMjAzE4wpFEblAJS8vn1gBThlfe/UwOjo7oKYoNL7S4OMnBgpW/Cni1SFnULPsL0AJoIQuQQDFwicEHhdg8Df7BAKv7cTb+G1za9DggqZpNDYewqKsbFL+Wra04CsBXiQgcuVALa0lZjktLQ27aqpRUVkVsHsnVBCD+YeBTLIfCH0B9IbPn78nUygxPUUh6OdxKRV/re+ffW7Ge2834fg7HT5+DteJsqKoFEajEcXFxXjyiWqYBxgceL4Ozc3NHt/7KoEXLoichaiorAIA1O2vxV25BVBTFACwTRVe9eVgIHpvFfCOmPn+4bUhR7gQ+gI4zWuHHAfgNGViUHPrvaFbCLzm5uaACWAuMPhp2YNYUVQKmqbBMFYwjAUWhhGtClMZvEhA5G8TeO3Vw7BaGZhMJgJhoEbaQCAKbbAPZJb9mWQvCF2y6dOUT4QLnzI5GcpkBQkw5EkzQM2YBqVyOtQzb8K8uXOh1S6AhRnE4V+/hrrnDhDHmEsx7Nu3FykpSbjjzjvwo/tLsW9fLW79hhY9Pd24aL4Iml6I/c8+DauVwfE33xUdXMyePRtflSU2WLl0mSHBW2Y6DZ0uG42Nh5CXl4/kpGTcfvsdSKO1mDdvjmCQxwUrly9fIcFKUnIKXG4ZkhVskDEKBZISE+AYlUIhc3sEKZIxl0eA4nCyoHkHJo6JtrCJIMSf6eXMLh8+IdWjKDXZ0D1v7nxRinfg+Tp0dLSjonIzNlc9CpVKjby8fBxuPIhf1f47Tna2BcxzfVUVT4wiHm5sCJpq0udkY1FWNvpNJhgM67DmwbUkr9jc3Iw0mg7ZNDOMBW7XCBjGIqiG3ko4OGwPlCdkTXA48HHRrTJZiaQUymOSgD/w+B0nW7dUkYgWAHJz87F3Xy2J4L6OpjZWIHLvt4VhyLaCoqJSkow+3tIEFaUm90AIxOX3fh9abRoGvhzA5198hsEhB2xDDIZHhkmQwjfJnF8YxBSzJjg5KTEk+JKVyZg2YyaoGWwub+68W5CefiuuXhsSNLXcKisrw7x5c3Bp4CIMhvXo6OzA7bffgdb33oHBsB6zZqlRt782aAfyV9XUhmOa77lnKR544AFMS0nCh3/0/759+MePMHuWGq//xxFk6bKRmZmJqs1bceed38OIzY6M8Q4hIfP+yYU+vNd6ApcvXwFNp+Fb38qEVCYHJG5IJBJAKocELsgkEyaZM8dSuAXzhOOm2C2bPk35hEKRwLPR7NcclFxrPAcfpVZjxvQZmD6DgnbhN3Hz3Ftgt9v8+nhDwzboc7Jx5x3fg8nUjwce+DFOn/4INL0QubkFaG19B5WVVairewbH33wXQ8O2G+BFAKLTacPnf+sTfB8/udCH5ct/gIrKzejq+gh33vm9cSX9C26//Q682dKEktJSzJ6lFhQQPojfWEhj/i1aKFOmQ+K2QQIJZAkJcDqdcIzKIJW6IRlzwel0+fUHfQDkq59MJoNMoYQy2RM+ilJj/gIat96agcFrDN747W8FFe/A83WgaS0uX/o7HnpoI2haizlzbkbNk9XY84u9MPYYcfMcDXp7z8FutwdtrboBnvhgZfl9RZiWkoT/+etffEC8NHARvb3n0PreO/i0vw8jNju2PrYdL710ALv3/AoOuw00rfWopPgDcfCaFXPm3Ixv3JqJpKQkOOw2QAKMjToIhE63dLzP0FcFfQDkqx9nemUJCVBNTwGlVmPm7LnQLvwmhoZsaGlpxvMHXvK4SH1ONvY+tRezZqnxxutHkJH5LYzY7Fj1wGq8+OILGAMwZ84cXDSb8UFnG3p6jAAkOPzrIzfAi4EiCoE4NGzDJxdYhbx0mcHgNQvOnu1GWhoNiUSClpYmFBZ+H28ebwrYpMuB+Ie2dgxes2LevFtw89z5sDtGMTbmwtioAza7zcMUe6ugw+lio2Au/cJNJOB8v+kpCkgTUkBRKsxJVWP2TTfhZGc7ft/e5TfqMhjWQ6Wi0NNjJD143DgLhrEIloZuBBeTE6wEe++5qpOYDiJ/979waT6Gh0fw6WcXwTBWuF1DPgEJF4wMDtlcBEDvnJ9SmQxFYiIoFYVkZTK02oWwOYJ3mWhSKVT+fDOpZqwoKsX9JfcBwA3wplDUHO4qLy/DLfNuwl/Pn8PI8AgYK8NWU8bTNfy0zOCQzSW4I12mUJLAAwASE5PGx5epg16AeYBBn6kPO6pr0PhKA+4vuQ/mASYgfOXlZfj4449x4MCLN+CL4crIyMDuPU/h448/xtYtVdCkUlF/DTVFIUGeQrrbpQkp7P7u8eMvvI88k3oHH0JLkqAM6SLO9nRjV031DfDiHMT/6o4NiCnKxKDMcMwFnMmRJHdDKleSJxW7uk53B6xe3AAvPpZGo8HuPU/hD+2nYgKiVK4kh/qQrRleW3M9AOT+kzyY624ZL5IkKiKbIXgDvK++Ik5LUUCuSEKyHEiUj3lMtZjgbHwLh0I2ASD3Te8D+RLlE80HCQmhH+qsSaVugDfFFDEaIHof/MP3Az0UUHBWM++HOWcy3GVYV3YDvCkKIrf/JNzFD0T8rQS/9tvrh+SKJFGnf38dltlshkajuS6v6w3KVF4KuZwF0N98vuuxtm97DBaGjZyzdTrSjAqwnb38Ll/+19zutn17fwmGsYCmaQAgUwUsDIOiolIUFhaKD6a6utBvuoCeHiM6O9vJ9019fVCr2ddekLYQOp0OK4pKo767rrW1FS0tTTjb0w0rY4HFwkCtpmCxsNkFbrCm0XgGOt1irCgque6WJkGeIgI8BQAHnI4ACni9lIWfJBUzMAhgM/h6vR7/+O1v+n28Poed6xxscd3HADsmDQCydIt9KgNceunceXbEx959tSQJHwkIZrMZdftr/VYt+N87d96Ejg72g7Ft+w5s274Dq1aWoKioBKse+PF1u4+JcvHBqhRxtjjHV5NKYVFWNjSpFDLTafL3sqUFZA8EB1btM89h+b2FgvBxjzX19cFqZYIq3j35S3C8uQkfdLaRm01RKnJNq1aWkOfUpFIejrp5gMH+Z5/GhrKfYPu2x0L+3Y++/hvcX/pD7N1XK+osEk0qBavVgjSa9piksObBtWG9fqyWdyomoA/IPUjoUGbvI+5jsQzrymAysQ0ONK2F7ueLYTSeAU1rYWEYWBkLKIrt9D3b040d1btgEjFoyDzAkIHj/lTneAvbHcxtAud+TkWpoc/JhpWxoHNccfgfAlqrhUqlxqf9F2CxMOg63Y2u0924O7dAtMnfvu2xgCUy7wNyOPCt4+6JilKTx2hSKRxvaYLRaMTb77TGtR8YVyaYYRhyDEJ9fUPAU4n0Odn47z/9FfUvvYBdNYf8PtZiYcgN45TM2+T+qPQ+D/XsOt0NfU42zAPdyEynka3T+eyx9Xwtk6C7cLjxIKzMFeTmFQQMGFpbW7F3Xy2BmvPx+L+T0L8nPiDdyM3Nh1pNQa2myIfz/RNt2LjxIRw48OKk3kdZQsL4WcoWtpAxPpswZAC5KshkrYyMDKSlsfsU9DnZQTsy9u39JRlrS2u1UKstUFFqFBWVwmg8g6NvHPO4UUIKuKHsJ1BRaixbOjHagjuUBgAWZWWToUC5efl+z40TMv9FRSVIoxeibP1aNBw67BfCw40HiaLxn8db8bjAx/v/0tJodHa2k589d94ETSoFfU42jjc3XdfxI1NKAQGQG0xr4ZMI5d50TSqFgw2/xsnONhQVlXooG8NYQVEqvHbkKNYaWnG2ZwLiu3PzfZQnLY0ms2Uy02ksSFsIK2Px2JNy7rwJ+hw1iopKUL1zF5jxKP1kZztaWprIZnnOHPb3m2AwrEduXgGefLIa759oQ9n6tYLmsLe3F50d7X63S3KqV/nzzVhrWE8gNpvNON7ShI2PVKC/34S0NNrjA8u+V2y0frylKX4BDHZ4DJsTTJ60C6K1WgB95GZypoe/Kn++GRkZGUEjzcLCQr8+WG9vLzasf5BAX/tMHVpajnl0ZmtSKeTm5sNgWI/ynz3s6wbo9diy9XG0tk6ARY0PkjSZTChbv5ao6vsn2lD/0gs+z8PB7C96V6tZAPnwcTlA7rm4uYd8pTx33jTRDNLShN17nrqhgGJSEKa+Pp8uGm+Tl5aWFvFrHW70THPsqqnGiqJSDz8rS7cYWVm6oCmNk51tHgHEsqUFPsMjAXZigRDIWbrFfkeMcD7s/aU/xI7qXT4fKO75ent7QVHUlEtGJ2AKro7OjojzXNzUUb6ZtbzSgNy8fI+IW8zr7N7zFIxGI1E7q9Ui+Lhz503o6uryMIcUReH9E23ITKfJhFdO9fnRNfsh2YFdNTtQVFSKRVnZ0Ol0RBXjudSpUCSSUR4yhRKjjmEo5AoMYYSrhCgEfyge84PmAXZvK181A/6cgOPf29sraPLMAwyZMrV3Xy3JrYlZFZVVBEBTXx9orRbmgW4BtWz3ADAjIwOaVIoEDpzJ5aJx/u9+V24BSTpzETML4mLcnZsfd34e2xM4EQErEhNhdzkCK6B3F0PcmGeeOdv4SAWJaLdt3+HhI3KRIme6Kn++GVu2Pu7xXNxhNN7rrbfewuHGg8QPLCoSD2BhYSGJ3M0DDHLzaFgZiw/oHR3tPtez84kabHykwsP18HZBzAMMzp1v8ImWz503kevNTKfx+7ZTMJlMoChqSjSAiK6EhFJeCVvlRBTXNakUli0twIqiEvSZ+ohqcOCdO2/ycMD7TL5bC1XUTJ+KytYtVR7wcY+LZAmpLGdOvf04bsxaKB9EodczGo0423MGt912G7ZveyyohYgrAIX6tSY7CAkEXnl5GWkR2r+/loyXOHfeRHwnMYui2BLWXbkFWLaU/XN3bkFYh097gK1Sk2v1V3XhlNl7HTjwIvbs3iXYgxdKX15LSxPKf/YwMtNpNL7S4OPrTlkFvB6mlnvzt26pgmFdGTG5759oQ319w3iVIT+oMnivftMFdJ3uRn19A9JoGgbDOuyq2eFRh9akUrAyV8L6HdRqCsXFxT4qG2xt2fo4/qv7Yx/fM9Dvxl2rPicbmelsEr+rqwu/bXoLK4pL0dh4CMvvLYxbAOMqCtZoNFi2tICYKdX42Wn+JmR1dHZAp1scsnKl0QvJ19m6iQFJtFaLLJ2aJLb5jxO7OOD4R4DxUzv8aoa/9+C1I0dRUdlF6rmf9l/wm6SeALTPA9aTnW0eyfTW1taQWtG+tnlALoWhGt8C6m98mCaVGh87VkbSF9yitVqkpdHo7zcRM81fXK+gPicbDGP1ijb7PF7vtSNHRV+/bjw65zdGeIPDRbLBll6v94hqu7q6cLbnDLqNRnzQ2Ub8XCGV3Fz1KJ6ufQ5bt1SR/OTJzrYbAIpZE8lYk1+TQ2u1+F3Tm0Qxft92SjCY8de5rNFoyAnoTz5R7dfUHX3jGKp39oqKJltbW9E4nkcM1ETBTyGFsoSAbGxsEBxjZ+rrg16vx0leEy2/ofYGgEGiXO/jp7jokQs0snRqn7JUqFF1UVEpPu2/4JF3E1pVmypEtTQdbjwI8wBD6rr+nnNB2oRZ37f3l6ShlFN+rgQJsKe195suII1e6JPj44Dkn/jJ90HZyogq7tMwcV0J0aRSgv5PNN5YnU4nqnT1/ok2bN/2GCoqq/wCXf/SC8QPDQSzPifbwwxSlIpUQbx/x2VLC/DTsgdhsTCofabOb5JZpaL8pn/4sHMNE5O9EuVjGHFOUQCDTVaINOAxmUx+0yL8tXdfLTGv3JAlboD6k09W+5hBf9e8o3qXx7/v5vmDXBMs18/HMFYCUtWmCrS0HENRUQmydIuRkZER0ATv2b0LFEWRZotITP/XWgH9+oDjp0hGuvR6PWqfqcOaB9cGdAW4aPPoGxPdMsdbmsgp7GLWqpUlPkFARkYGysvLUF/fgPLyAnLklnfPoVpNkdfWpFLI0i1GGk3jbE83cVE4N4VL52zc+JDHc9wtMvi5AaAIVTSZ+qL2fLl5BaR7hV/GC9SNw5k5i6VJ0Hx6f4/btyK0du6s8eg/5H4uM52GilKT3XD8Bl0uys5Mp0n3EPch4RL13IYqgD2uIV7LcglTQfG8AfBXZQjXFL/9TivWrF4Vcj6RaxQF2AS5tw+WmU5jR3VNwJZ8Lu/HMIUELE0qu/XSszu626+vx13LqVNsNmDN6lXIzcsnjbHXc4dcsBV3lRC1morJ2LBg67UjR3Hg+bqQKhecc9/nR5FXFJVi1QM/FlXjfvudVmzdUkVgCpaw9l6Z6TT0ej1qnqzG0TeOgWGs+F3Tm4L9hzcUMIAaLUhbiAVpbITY32+ClbH43Iw0mo7J65f/7GGU/+xh1L/0QsAz1rzTLyqvuYnLlhagemdNyO1Ru/c8hbWGMhxvOTa+18VE8p4ASKeNEHzcBi2A7eqJx6TzlDDB8bCNkAOxt7cXJpMJVuYKenqMpCymotRIS2N9NIOhDGd7zpBz7iLty8vIyMCWrY9jy9bH0dXVBYZhcLanG0bjGahUalitFo+USvb4VAZOceNd8aZ8EDKZi7/vJJAfpdfrY3LjOZDFqtlUnBXzlQLQbDbDZDLhZGc7GMYCimIbC1YUlcb1zTGbzTAajTjZ2Ua2AgBsPVw9vslpUdZi0DQ95QcSfSUBPPr6b1BX94xgBzIANDc3Q6fTkdxdXm4eSehez8XNoQl0Xpt3RiA3L/+6z375SkfBoa7W1lYCn7/1/ok2ZGXpcO68CR90tmFXTTVuu+02/OO3v4mjr/8m6momZu3b+0vcdtttqK9v8Nvtww9qMtNpmAcYMvtl+b2F6O3tvQHg9Vz1L72A++67DyqVGgvSFvotq23dUkV6+7iWfe7rNQ+uxZrVq8JWsPlzU7HkzhzUv/QC1qxehe9k34b5c1MDDgfauPEhkjf0HnAktChK5VPLff9EG35Uel/c3yO7U/LVA9BsNmP5vYWkC4SiVLBaLaQ7mn9D2Rl6ZeSsEqF1tqcbGzc+FPJ1HG+ZGP2xKGsxGQViHmCwd18turp8D/RZs3oVmXvDJdmDjWE7+sYxqCi1T47y3HlTWNd9wweMcB1vafJo+uQqGCqVGnt2swV/rs2pemcN9u+vDWjm7spl67BCkwsCfQj2P/s0ALaFSq/XY9nSgoBTuriuGS63J5Rn1OdkIzc3n5wU39LShK7T3aROrKLUHpO7Puhsw9HXfzNlfcIpp4C9vb1obDzk19fbtn0H+kx9aDh0GG+/08puQGIsAc1cfX0DOjva/T6v0Cpbv5ZAfVduAVpbWz1qtELAcs2v5gFGEL7y8jKc+vA0du95CuU/exhbtj6OUx+exp7du3C2pxs6nQ5WxkJeV5/DmuWWlmM3FHCylslkClihWLWyxGMcWUZGBl47chRmsxn3l/5QYIAPyD4UK2MJOv+5tbUVu2p2eDxPtk5H2vE50yik2tzreW8hANgSpL8xalu2Pk4mIaw1lIFhGLLv93rNq/7aAlhYWIhVK0sEGwc0qZTfrhONRoOKik3k2Hq+SebPcTEajR6JX7PZjM6ONjInWgh+k8kEhploBqgZn4jFXx1egy29XQLvifRmsxkMw5A/3D4W79TRVM8L+gDosNvjdjoCl/Pr7zcJdsnQWq2oG8L/OW4kG8C2xfO7pPft/SX2P/s0GQyuVlNkUirAdhxTlAqdne3Yu68W+pxsPF37HGqfqcNtt93mARPn+/lTyBVFJTCbzTjceAgdHe2Cw422bqnCWkOZIIhfCQBHHcNQpFBxfcE9PUZ0nWYbMdNodvwFw1h9aqT+flafkw2VSo33T7Rh1coSMhsQAHH+uWUch8BzSunEpHqLxROSrtPd2Fz1KE59eBqZ6TQZvWYymQKaZ31ONo63HMP+Z58OmJCmaRr35C8BwI4yjteRazExwXanOy4ueK2hDGsNZSErwNHXf+MxYre8vAxaWuvRx1fkVbIT6jsMtk2Ai1D52y/7TRegz8lmJ5kKTFhdlJWNDj+TV/mr22gk17B3Xy06O9txsOHXU1oN/Zpgh8OOJLky7i44nDe7/qUXPG7wqpUlsDIWbNvu2U7vPUE1rBzlAIPW1lbs3FlDFFBFzSSDy/U52VCrJ0qG+pxsZOt0yMvNQ3FxMYH+cONBnDtvIi5CXl4+FmWx5p9/qPQ9+Uvwh/ZTUxbCBABwOB1xc1BNNFdXVxd+WvYgzp03Yc/uXWAYK/Ly8sn8aP566623fNqo8vLyYbVayMwXbnkPk+R8O840/1vVv+L3bRNQ8McEd53uJsdNGAzr0Nj4Cp58otpjCPmypQXYUV0z/losxM3NzUStM9NpVFRWkXb8DWU/wakPT8f9/XDY7QAkUzsKFqVCZrPHbjVNKkWmqnr7WZnpNF5ueFWwh4/ryxPKRXJBhtAca29T6r2NlCsHGgzrPKJl8wCDVStLsNawgaR1Djce8nATuJ/v6GhHlm4x3j/Rhq7T3XE5emPMNezzvVEH+z2Hk50TKP2qwbdv7y9xf+kPPXarmQcYdHR2+ETA5eVl+H3bqYgaSDng2Pl9Jl4AYyRf8/fn8ld/f7/HrratW6rw2pGjKCwshEajgUajYZPRp075gN7fb/LoDD/ceDB+lS/AMQ2iAHS7RuIevNbWVvzjt7+Jbdt3EDPH3bTMdBp5uXlEbVatLMGpU6dw4MCLMcujnexs84hevc01wM665iYiaFIpVFRWCT6XXq9H1vjkVr4p19JaMtpX5/X/U2VJHU7nlDe3Gzc+hPvu8zxshhvew93YXTXVWLa0AKdOncJrR47GfJwtH7qMjAyfBLQmlUJ/fz/S0mhROUzOJHPAaVIptLQ0sWPYxs9FEWp+iHsAAyqfcziuL763txf/XLAk4OZwtZrCgrSF+FXtv+Ptd1onbY6ydwrHO0dpHmCwbfsO0LQWq1aWsBuOAvQScnuhue2aHMgMw6ZkIh2uGZcAxnuEe0/+koCnaS5bWoDft50KeF5IuKmgYAPMvQOPikrhw5/37qtFUVEJ9DnZqNr0qF/3Qmj2TNfpbjQ2NmDP7l3ITKc9VDdeVjAR8xsF25xSKLwyM/F0YPVPyx4Mmrj9tP8CNBoNma2nUlEkrcFXKLbhc7GHzxXM7HM+19mebqgoNUnV9BjPgNZqfdq6ArVr9fQYyfl4/f05qKjYROZTn+3pJm1fggpPsbNkFqQtjJu68KjLJTpu8AHQ7pJAkRjf6nf09d9gRVEpVOMz7/x1x3Bmr27/0zj6xjGfuu9EMECjubmZjOf47z/9NYh5ZchRCQvSFsJqtXgMHzcY1qO313euYPXOGsEaL03TgMlERm0IzaoJtvwFMPGwbE5p6AoYz/DtqqkmqpNG00Q9+CsznUb1TrY5lTtilavf0lotrIwFFZVV6Ohox9mebmLKzQOM6BYnfns/95o7n6iByWTCgjSTD4B6vR4HD72K++67z8NNAIDGV9jr5wYPceoXbHP88Tg+hktI3AQBdDjHAEyNakhHZ8f4TTeRaHJFsecYXn1ONn7X9CYYhvGYEjXxN3tTxU4/ELs4dd27r9avP1ZYWIi33noLu2p2QKVSQ6fToW68Y1uTSnmY6K1bqgQ/XPyUzm+b3oqr++NyDsHuDDy/kUtCB1RAt2sIABV3APLLWnyoVq0sIf5Ybm4+qjY9iorKzfigU7hFnmtG4GbycUoW7lwafU42DIZ1qNpUEfSxXFDU29uLDWU/8VBf/mp8pQEriktRXl7G/m68kiDXnBrLGnAsJ6yyogdIHY7RwLJpt0UUgHR2tkctP2U2m32OrwLYlvq8vHxUVFYhNzcfx1uaSNTozzeqr2+AcdznY49jzQ4429nzxlCkHZ4zoxUVm1BX9wwvPRJ8gldGRgZOfXiaTYo/X4fy8jLyvNw2zPr6BnzQ2Ya0NBppNI3i4mLUPlOH3Xueiil8XV1daG5ujszkjrPDipkQhM4JBXQ4x6CQs7U6R8KYR1MqW0QGXK7Qk9Zdp7uxZMkSrFpZgorKzRHl4TQaDT7++OOAj1mUxWBFUSkoimJBGX89fk8eAFgY9sy5vLx8Mua2p8cIilIH9f+Y8ekFmek07sotQFFRqU+bfkjq6TWA3Hu/L0VRkxbhdnV1kaAtIoWz233+PeoY8VC/oEGIw2GHVK4kM37tjvB7ArkJn5GCGM6nXuxOt1B2lnEDij4YP49j2dICUae8x+p3nAzwxFgIF8+/szslAevAPgBybVlcKsbmlCKJe2JXdEp20QLxeq6MjAwcbPg12a/B9+24iVa6OJ3JHK7ilZeXIS83L2iKyOZg3TVOtLgUDBcB8wMQh2OUBdDpsEGuSBIORpzDGHMlRqR+X0UQ/anUVPk9QgFPS2vR0tIE9bjvG0zlXS4nxlzDAasgXEyR4B2ZePiBrAdCwmu+vN4AcWouMeBlptNYUVQKk6kPVsaCRVmlYMY3YhkM6/0OgWIDjhEPsXK7hjwaUfn+HyBQC+Ykkkimw46rg3ZctVphcyCi8bn8FikhEJcsWYLl9xZOya6OqQDemtWrsGTJEh/4uE6dzHQa+pxsrDVsQGdnO4qKSqCi1GgZP7POZOrDoqzF7JkpAThgGAuuDtqJ/2d3SUgjqveSzJ0za2xaCmt+5YokKOQSKOQKyBRKTE9RQJqQghkpclBqNebOnYskpRpG4xnBzTXB8mS543su+Mfb+w0IbihizBWPUzqKUoNhLMjK0qGjs2P8DL51JCuw/9mn8btjb6HmyWrBUiIA/Ki4EIu/uwQu5xA+7TeBsVhwdcgJt2sI14YcrFV1OuBwjhHzOzhkc/kACADTlGwKhoNQmZyMpBQ1VJQat8y7CQsW0BgecaCjo10UiOyG8Tp0dHZAPb7v1jLuvAc7ZyPcecs3wAtuag88X4duoxFqisKKolL8tOxBrDVsQEdHO3Q6HSwMQ4574Nr/hYQiLy8fymQFPv3UhL99/iWsjAW2IQuGR0YIfAAwOGz38P98ABRSwcTxnCAfQtW0RNw8dz7m3HwLrFZGFIhbt1SBotS4Ozcfm6sehcGwHh0d7eQsDADQ6Rb77H+4oYixSadU/nwzO3eaUpNTlDo62tHfbyITJIJZKC6HevHvf4P5y8tkuqvbOQxmvOvIn/pxAMqmT1M+oVBMxCIyWQJG3QDghhRuuCUKJCpkcLpcSJTL4HCOYszthMvpxJcDl5GiTMLixd9FQUEuFAo5Lg1cxNCwb9Xkwz9+BJlMgu3/ZwfWrF6Njo4OaObcTDaWb31sOxobD+GTC8JHHvzpz+fQ0NCArv/8ELNn34Rbb731Bm1e4D22tQqb/20r/vTnc37B2759O2w2OyiKwhgkqK9vwPLlP4DJZMIYJDj+5rsYvGbF4DWLz31Uq5RYseI+PPLIRuhz/gmMxYK/ffo/sFy5AsuVAVy9OigIHwCM2F1sUDLq4sUbLrds+jTlE5CMQSaTkQfIZAmQySSQyWQYG3XC6ZYiUSGDzW6DZMwFp9MJu8MGl1sC+8g1DA9fAyDFHd+7HXfffbdfED+50IdlSwtw++23o+65A9hctQm7/u8vUHBPPnp6uvHfPWdQVlaGlJRkvyB+cqEPR44cQe+5jzFt2oyvPYhiwMtMp1FVtRlJSUlISkpCYlISnnvuAGpqduHSwEVkZmYCkGDf+NnCn1zo87h3mlQKy5f/AI/+6yPQ67+Lq9eG0G/6BANfXsQlyxBsw9fAWCyw2wYxZBvDmNsZ0PSy8DkxOjrGAiiTSTHqdntACEkCALcPhE6XC1KpBGPuMaKGTocDI3YXrMxlyBVKLLnzduQXLENK0hjMFz1BlCeM4e8XzfjkQh8Gr1mxefMm6PV34I2jR/DQQxux/9la/Mu/rMbgIAOXwyaoppwiHjly5GuriGLA4+B57PFteO+99/D97/8A27ZX45/vycfy5feit/cvKCz8Pv6z6z8JfN4/u3z5D7Dx4f8Fvf67uHzlKi5c+Cu+HLiMq8xlXBu8hqtXBzEydA0Ohx3DIyM+8DmcDoy6feEDgNHRMbdk7pxZJDHj7QsCIP4gPygBQKJjAEhWJiMxMQkUpYY0IRnTUhSYnToX8+dpcG3QjvY/vIM333rPr4+oz8kmzaPHm5tITx23jrc0BWy9/zoFK2J9PMO6MtA0DZPJBJqmsfGRCmzdUoWsLB3WPLiWnGcnVF7jhqHf+4NCzJypxmefm3Fp4AsMDjngdo2AYSyw220YGWZru1y06212Ob/PW/0Gh8jXLg8AFQoZFHJ5UAgTec0KyuRkKBSJkMqVmDEtEZIEJVTTEsMCkcu695n6kJebh8bGV5CXl48+Ux8Zaxss4v6qgigGPG7wUhpNQ01R2LuvFgeerwPDWEFRKnQbjdCOnzQqFOwFA886aMeYaxhXB+1wO4fhcNhhc0pDgs/hdILXgeUJYLgQ8tVQDIgdnR0BjybgojSGseDu3AL8W9W/kpYpg2E96vbXilLEisqqKXNkVaSKZx5gSL12V001Kiqr0Nh4SNT7JRY8f6rnsNs9ks0i4RMGMBQIARCTzFdDvlnmQFQqk5EgFw8it9+CPdlcjT5TH7S0FgxjQWdnOxZlZYtqWZ+qIIoFb0VxKYqKSkmbP2dFOjrayZnC/t4jIfAYxgrbsAXDw8Lgcb4et64NsZWzMODzD6C3P8iHUIwaJsndxCwnysciAvG1Vw+jalMFOaBlzYNrceD5uvFk6WK/wxynKohimwRWrSxBUVEJqjZVwLCuDEajEXl5E9O9As0aDAU8u1MiaG6FVI/92xe+sAAMpITeEAYDMRJF5MpFXKZ+QdpCFBcXo9toRFFRKQ43HsRawwYcbjwoqioTryCGElxQFFsO5T6An/ZfwMsNr6LmyWqfyV2hgOew2zE84gmeP3PrT/VEKt+4mjpcktkzp48pFAq/ALKwyQXVMBiEQv4hp4jKZCVbYREJIjca99x5EzEzXCa/32RCj/EMqVcGqzPHE4higwsrYyFDL+vrG3Dg+TrU7a/FWsMG9I13rfirJIkFDwAJMITMrbfqiYGPfZ4wARQDoVgQ+f4hF6iw3w8NRH8m2rCuDCZTH46+cQzLlhZAp9N5TESNNxBD6cdTUxSo8TOJKUoVcnBRVFSC6dMSJw08MfBxAMqUyYlPcAlooTU6OgbvRDW/YgKAlO5G3aMTiWunC063FJIxF2QJCXC6XLDZbZBKJZBKxmCz2eAYlUIqZb8edY3C5XLBbhvClwMDkMnk+O53spBfsAyzZqnx+d/6BJPSf/64G3t+sRd2ux2v/8cRDA3b8J3v6JCbm4/e8+fw+ecXoUml/Ca0ucrKZCW0u7q68NDPNmD7/9kRsHLBVYTy8/Kw/9laHH/zXdx/fwkaGw9hUVY23nj9iF/4uARyZWUVvvtPOgwMXManf/sCzJWLuGq1YGhwCNcGr8HpcuLqoB0jQ9cw5nbC4bDj2uAgnC4XAW/Y7obDNoKxUScvsTwaMXwsW6NuyeyZ08dYpQu+JzgcNZwMRWSnn1pI0npHdQ0ppvPNtZiNNrFSxK6urqDuAefvcqmntYYN5P8YxgILwwTsHgpF8QJFtkKKJ0b1QoHP4XCwQQgHYKQQevuG7N/RATFJyZ77GwhEbuL9oqxs1O2vBUWpoNMtJiaLf0YIgEkzzaGAl5WlI8n3w40HSRqq8ZUGv0d7ceD98L7vI/+eez3AczmHcNVqDQk8AILmlh/hBlK9EODzBTCaEAYCUalMZr/vB0QuYg5HEZctLUBxcTFp9VJTFO7OLcDJzjYyVX5D2U/QdbpbdGUlHBDFgCdUAVJTFI63NOHlhldxsrM9aDplRXEp8nLzQlY875SKEHjRVj0v+IQBFAuhUJomHLPMB9Ff6iaSYGXZ0gIyaJybQt/S0oSna58TDUgoILa2tqJuf21QxeMqFZyqbd3CbqDnarWrVpaAprXY66dJQEjxJhu8YGmWIPD5BzBaahgvIHJF+MbGV2AwrBufTJqGqk0VMA8wZE9EsPJeIBDFgMdPqxQVlZIaN7/8yB3PcD0VL1BCOQqqJx7AaKlhKP5hLEDUpFLI0i1GcXExVCoKjY2vQKfTYe++WpSXl6GoqBQtLU2wMhbREwE4EAGIVjyTyUSO9CoqKsWirGxS5w604gm8KKheaACGCuGE2sljBmK4UTN3Tu+O6l1kqnz1zl042dmGu3MLULWpQrRJFru2bqkCTdMkd7fxkQoCoNF4BhWVm/26AtEytcEi21AUT6zqiYAPLpebzQMGe6LR0VGMjo4iUL6QnzNkc4Nuwce7R12k4dU7fwiA5BDdEgUkYy6Mjo5CKnXD6XLBMSqDBC6SR5RIJRgbE59HNA8w+Pzzi/jDiXcgkUig02Wjv9+EHP0d2PvUbhx/892oQKfPycaa1avx4R8/wv/89S/Iy8tHS/MxMIwVNTVPYsRmhy5LB7vdjpdeOoCTH3zkA97qNavx0EMPY9Gi2wLm8ex2GwavXYPL6YLDYceQbQwOxzDG3E6/uTzvfB7XMMpvl48EPofDgdHR4I9zu8fcEmpGylhCgvhR0dFUw0hSN+xrRJ5H5M4KFuP/iVlc5QJgt59SlAoqSg2DoQw/LXsQd+UW4GxPt+Dm7khMLQDRubxgKZVYqp63AoYMYDgBSqxAjEXUHO7ikuFGo5E0S+Tl5qG/vx8MYwlYFhQC79LAF3A5HTEztWL8vFBVL9QVEYCxUENvEIUmtooBMZq1ZjGLSyRz2xIZxkogDFa5iEZwEQg875RKsDmPsVY9QQABIFwIY6mGoSpitEt8oSxNKgW1msLv207hySer8UFnW8zTKbFSvFiqng+AMplsbPp482msIYwUxHhXRP4Ufn9RrVhT692dEq7ixQK8KMGHa0M2TwAjhTBWIIZimkNN34SzZyUcdZxs8EIxtZMJHgcfgNgAGKlpjlawwgdRyDR7bxXgQFSpZmL+/Hmw2UcjBjEYeEKt75NtasXAFw3ovOHzC+BUgjAaPmIsQOSDl5Qog/nLy353mcUzeLGEzwNA7wdGwyeMdaASTUXkp3CEQJydOgcARG0n5cADgEsDF2G1XhEFnpi2qFBLZvEI3rUhj+sNDGC0IYyVIooBERBuAwu0eSpZDhKwqKhZmHPzLYIgciWzJXflQa5QBgQvWPIYAIaHRwT9u6kGXhD4/AMYSyUMBcZYgRhq5MxXRYpSY+7NqWQ+IgAyH++Lvw+AYSxwu6IbWMQavGhDJxBs+H1IQAD5IF4vCCcbxEDmmR89z1CpkJIyHQAwNHSNdB6POOGjdkJmNh7AizV8AcALDcDJUMPrFTUH8hO9VdFbGb2XEHRCaufPvwsVvHChu86qFx6AkwVhrE1zsIAFgKAqcjCyr58Y4Mb6QsdXOwARR7TxqHhhwBc6gPEGYqQpnGCJbX8wil2BoPNOHE+VVEqUwIsMwFhHyqFCGEtV5MPIARlo8c/EFWNiYwneZClemPBFBuBkgzgZAYs3jP6A9IbSH2yRQBfPiheh6kUXQCEQr2fqJtowigXSGzYh4GKtdpMRXPBXhPARAKN6CFy8mWZ/QIZSZYl0iTlrOZw+vOthaqMEXvQVcLKVMFogioUxVCBDhS5c+CYrwIgBfAAwJpHJZAwmaX2V1DFkhQqz/WkKBRRhGYf/DxvYt6piLfyBAAAAAElFTkSuQmCC" width="40" height="40" alt="The FixOurStreets216 Project logomark">
+    <div class="footer-fos">THE FIXOURSTREETS216 PROJECT</div>
+  </div>
+</footer>
+
+<script>
+  // Active nav link tracking
+  const sections = document.querySelectorAll('.doc-section');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const id = entry.target.id;
+        const active = document.querySelector(`.nav-link[href="#${id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
